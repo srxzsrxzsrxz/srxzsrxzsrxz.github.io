@@ -1,0 +1,20 @@
+<header class="site-header">
+  <div class="site-container">
+    <div class="header-content">
+      <a href="{{ '/' | relative_url }}" class="site-logo">
+        <span class="logo-badge">⚡</span>
+        <span>{{ site.title }}</span>
+      </a>
+      <nav class="nav-links">
+        <a href="{{ '/' | relative_url }}" class="nav-link">Home</a>
+        <a href="{{ '/about/' | relative_url }}" class="nav-link">About</a>
+        {% if site.github_username %}
+        <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+        {% endif %}
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+          <span id="theme-icon">🌙</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+</header>

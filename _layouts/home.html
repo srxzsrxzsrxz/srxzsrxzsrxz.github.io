@@ -1,0 +1,48 @@
+---
+layout: default
+---
+
+<div class="site-container">
+  <section class="hero-section">
+    <div class="hero-avatar">✨</div>
+    <h1 class="hero-title">{{ site.title }}</h1>
+    <p class="hero-bio">{{ site.description }}</p>
+    <div class="hero-tags">
+      <span class="tag-badge">🎥 Vlogs</span>
+      <span class="tag-badge">💻 Tech</span>
+      <span class="tag-badge">📝 Life Notes</span>
+      <span class="tag-badge">📱 Mobile Friendly</span>
+    </div>
+  </section>
+
+  <section class="posts-section">
+    <h2 class="section-title">Latest Posts</h2>
+    <div class="posts-grid">
+      {% for post in site.posts %}
+      <article class="post-card">
+        <div class="post-card-meta">
+          <time class="post-card-date" datetime="{{ post.date | date_to_xmlschema }}">
+            📅 {{ post.date | date: "%B %d, %Y" }}
+          </time>
+          {% if post.categories and post.categories.size > 0 %}
+          <span>&bull;</span>
+          <span>🏷️ {{ post.categories | join: ", " }}</span>
+          {% endif %}
+        </div>
+        
+        <a href="{{ post.url | relative_url }}" class="post-card-title">
+          {{ post.title }}
+        </a>
+
+        {% if post.excerpt %}
+        <p class="post-card-excerpt">
+          {{ post.excerpt | strip_html | truncatewords: 30 }}
+        </p>
+        {% endif %}
+      </article>
+      {% else %}
+      <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">No posts yet. Run <code>./new-post.sh "My Title"</code> to add one!</p>
+      {% endfor %}
+    </div>
+  </section>
+</div>
