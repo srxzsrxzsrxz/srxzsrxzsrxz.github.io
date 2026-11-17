@@ -15,4 +15,6 @@ plugins:
 exclude:
   - README.md
   - new-post.sh
+  - run-editor.sh
+  - editor.py
   - .pages.yml
