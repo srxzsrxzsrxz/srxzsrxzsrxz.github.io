@@ -1,0 +1,25 @@
+title: srxz's Blog
+description: Notes, vlogs and ideas.
+author: srxzsrxzsrxz
+url: "https://srxzsrxzsrxz.github.io"
+baseurl: ""
+
+theme: minima
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+
+permalink: /:year/:month/:day/:title/
+timezone: Asia/Shanghai
+
+header_pages:
+  - about.md
+
+minima:
+  social_links:
+    github: srxzsrxzsrxz
+
+exclude:
+  - README.md
+  - new-post.sh
+  - .pages.yml
