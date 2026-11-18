@@ -4,22 +4,49 @@
       <a href="{{ '/' | relative_url }}" class="site-logo">
         <span>srxz.io</span>
       </a>
-      <nav class="nav-links">
-        <button class="nav-btn" onclick="toggleTerminal()" title="Toggle Linux CLI Terminal (HotKey: ~)">
-          <span style="color:var(--hacker-green);">&gt;_</span>
-          <span>CLI</span>
+
+      <div class="header-actions">
+        <!-- Quick Action Buttons for both mobile & desktop -->
+        <button class="nav-btn nav-icon-btn" onclick="toggleTerminal()" title="Toggle Linux CLI Terminal (HotKey: ~)">
+          <span style="color:var(--hacker-green); font-weight:800;">&gt;_</span>
+          <span class="btn-text">CLI</span>
         </button>
-        <button class="nav-btn" onclick="openSearchModal()" title="Search (Ctrl+K)">
+        <button class="nav-btn nav-icon-btn" onclick="openSearchModal()" title="Search (Ctrl+K)">
           <span>🔍</span>
-          <span>SEARCH</span>
+          <span class="btn-text">SEARCH</span>
         </button>
-        <a href="{{ '/' | relative_url }}" class="nav-link">~/home</a>
-        <a href="{{ '/man/' | relative_url }}" class="nav-link" style="color:var(--hacker-green);">~/man</a>
-        <a href="{{ '/about/' | relative_url }}" class="nav-link">~/about</a>
+
+        <!-- Mobile Hamburger Button -->
+        <button class="mobile-menu-toggle" onclick="toggleMobileMenu()" aria-label="Toggle navigation menu">
+          <span id="menu-icon">☰</span>
+        </button>
+      </div>
+
+      <!-- Navigation Links (Horizontal on Desktop, Drawer on Mobile) -->
+      <nav class="nav-links" id="site-nav-links">
+        <a href="{{ '/' | relative_url }}" class="nav-link" onclick="closeMobileMenu()">~/home</a>
+        <a href="{{ '/man/' | relative_url }}" class="nav-link" style="color:var(--hacker-green);" onclick="closeMobileMenu()">~/man</a>
+        <a href="{{ '/about/' | relative_url }}" class="nav-link" onclick="closeMobileMenu()">~/about</a>
         {% if site.github_username %}
-        <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link">~/github</a>
+        <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link" onclick="closeMobileMenu()">~/github</a>
         {% endif %}
       </nav>
     </div>
   </div>
 </header>
+
+<script>
+  function toggleMobileMenu() {
+    const nav = document.getElementById('site-nav-links');
+    const icon = document.getElementById('menu-icon');
+    const isOpen = nav.classList.toggle('active');
+    icon.textContent = isOpen ? '✕' : '☰';
+  }
+
+  function closeMobileMenu() {
+    const nav = document.getElementById('site-nav-links');
+    const icon = document.getElementById('menu-icon');
+    if (nav) nav.classList.remove('active');
+    if (icon) icon.textContent = '☰';
+  }
+</script>

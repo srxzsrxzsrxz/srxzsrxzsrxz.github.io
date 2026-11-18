@@ -14,15 +14,26 @@ permalink: /man/
         <span class="dot dot-green"></span>
       </div>
       <div class="terminal-sys-info">
-        LINUX MAN-DB // SYSTEM REFERENCE MANUAL
+        LINUX MAN-DB // 84 COMMANDS LOADED // REFERENCE MANUAL
       </div>
     </div>
 
     <!-- Search Controls -->
     <div class="man-search-bar">
       <span class="man-prompt">root@linux:~$ man</span>
-      <input type="text" id="man-search-input" placeholder="Type command name (e.g. arecord, ffmpeg, yt-dlp, grep)..." autocomplete="off" spellcheck="false">
+      <input type="text" id="man-search-input" placeholder="Type command name (e.g. arecord, ffmpeg, yt-dlp, grep, curl, ssh)..." autocomplete="off" spellcheck="false">
       <button class="nav-btn" onclick="clearManSearch()">CLEAR</button>
+    </div>
+
+    <!-- Category Filter Tabs -->
+    <div class="man-cat-tabs">
+      <button class="man-cat-btn active" onclick="filterCategory('all', this)">ALL (<span id="cat-cnt-all">84</span>)</button>
+      <button class="man-cat-btn" onclick="filterCategory('media', this)">AUDIO &amp; VIDEO</button>
+      <button class="man-cat-btn" onclick="filterCategory('files', this)">FILES &amp; DISK</button>
+      <button class="man-cat-btn" onclick="filterCategory('text', this)">TEXT &amp; GREP</button>
+      <button class="man-cat-btn" onclick="filterCategory('network', this)">NETWORK &amp; WEB</button>
+      <button class="man-cat-btn" onclick="filterCategory('system', this)">SYS &amp; PROC</button>
+      <button class="man-cat-btn" onclick="filterCategory('dev', this)">DEV &amp; PKG</button>
     </div>
 
     <!-- Quick Pill Tags -->
@@ -37,7 +48,7 @@ permalink: /man/
 
 <style>
   .man-container {
-    margin: 30px 0 60px;
+    margin: 25px 0 60px;
     background: #05070c;
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
@@ -45,7 +56,7 @@ permalink: /man/
     overflow: hidden;
   }
   .man-search-bar {
-    padding: 16px 20px;
+    padding: 14px 18px;
     background: #090d16;
     border-bottom: 1px solid var(--border-color);
     display: flex;
@@ -55,7 +66,7 @@ permalink: /man/
   .man-prompt {
     color: var(--hacker-green);
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.95rem;
     white-space: nowrap;
   }
   #man-search-input {
@@ -64,42 +75,71 @@ permalink: /man/
     border: none;
     color: #fff;
     font-family: var(--mono-font);
-    font-size: 1.05rem;
+    font-size: 1rem;
     outline: none;
   }
+  .man-cat-tabs {
+    display: flex;
+    background: #030408;
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+    white-space: nowrap;
+    padding: 2px 8px;
+  }
+  .man-cat-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--mono-font);
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .man-cat-btn:hover {
+    color: var(--text-primary);
+  }
+  .man-cat-btn.active {
+    color: var(--hacker-green);
+    border-bottom-color: var(--hacker-green);
+    background: rgba(0, 255, 102, 0.05);
+  }
   .man-quick-chips {
-    padding: 12px 20px;
-    background: #080a12;
+    padding: 12px 18px;
+    background: #070912;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    max-height: 120px;
+    gap: 7px;
+    max-height: 140px;
     overflow-y: auto;
   }
   .man-chip {
-    background: rgba(0, 255, 102, 0.08);
+    background: rgba(0, 255, 102, 0.06);
     border: 1px solid var(--border-color);
     color: var(--hacker-green);
-    font-size: 0.8rem;
-    padding: 3px 10px;
+    font-size: 0.78rem;
+    padding: 2px 9px;
     border-radius: 4px;
     cursor: pointer;
     font-family: var(--mono-font);
-    transition: all 0.2s;
+    transition: all 0.15s;
   }
   .man-chip:hover, .man-chip.active {
     background: var(--hacker-green);
     color: #000;
+    font-weight: 700;
     box-shadow: 0 0 10px var(--hacker-glow);
   }
   .man-display-box {
-    padding: 30px;
+    padding: 24px;
     min-height: 450px;
     max-height: 720px;
     overflow-y: auto;
     font-family: var(--mono-font);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     line-height: 1.65;
     color: #f0fdf4;
     white-space: pre-wrap;
@@ -109,17 +149,17 @@ permalink: /man/
     color: var(--cyber-cyan);
     font-weight: 700;
     border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
+    padding-bottom: 8px;
+    margin-bottom: 18px;
     display: flex;
     justify-content: space-between;
   }
   .man-section-title {
     color: var(--hacker-green);
     font-weight: 800;
-    font-size: 1.05rem;
-    margin-top: 24px;
-    margin-bottom: 8px;
+    font-size: 1rem;
+    margin-top: 22px;
+    margin-bottom: 6px;
     display: block;
     text-shadow: 0 0 8px var(--hacker-glow);
   }
@@ -135,12 +175,12 @@ permalink: /man/
   .man-results-list {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
   .man-result-item {
     background: #090d16;
     border: 1px solid var(--border-color);
-    padding: 14px 18px;
+    padding: 12px 16px;
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -153,47 +193,67 @@ permalink: /man/
   .man-result-cmd {
     color: var(--hacker-green);
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     margin-bottom: 4px;
   }
   .man-result-desc {
     color: var(--text-secondary);
-    font-size: 0.88rem;
+    font-size: 0.85rem;
   }
 </style>
 
 <script>
   let manDatabase = {};
+  let currentCategory = 'all';
   const searchInput = document.getElementById('man-search-input');
   const chipsContainer = document.getElementById('man-chips');
   const displayBox = document.getElementById('man-display');
 
-  // Load Database
+  const CATEGORIES = {
+    media: ['arecord', 'aplay', 'amixer', 'alsamixer', 'ffmpeg', 'ffprobe', 'yt-dlp', 'mpv', 'pactl', 'pipewire', 'wireplumber', 'sox'],
+    files: ['ls', 'cat', 'less', 'head', 'tail', 'cp', 'mv', 'rm', 'mkdir', 'rmdir', 'touch', 'ln', 'find', 'tree', 'file', 'stat', 'chmod', 'chown', 'df', 'du'],
+    text: ['grep', 'sed', 'awk', 'cut', 'sort', 'uniq', 'wc', 'tr', 'diff', 'xargs', 'tee', 'echo'],
+    network: ['curl', 'wget', 'ssh', 'scp', 'rsync', 'ping', 'ss', 'ip', 'nmap', 'dig', 'nc', 'tcpdump'],
+    system: ['ps', 'top', 'htop', 'kill', 'pkill', 'free', 'uname', 'uptime', 'lsof', 'dmesg', 'journalctl', 'systemctl'],
+    dev: ['git', 'gh', 'tar', 'gzip', 'zip', 'unzip', 'tmux', 'screen', 'crontab', 'watch', 'env', 'sudo', 'man', 'dnf', 'rpm', 'pip', 'pipx']
+  };
+
   fetch('/assets/js/man_db.json')
     .then(r => r.json())
     .then(data => {
       manDatabase = data;
+      document.getElementById('cat-cnt-all').textContent = Object.keys(manDatabase).length;
       renderChips();
       
-      // Check URL param ?cmd=xxx
       const params = new URLSearchParams(window.location.search);
       const cmdParam = params.get('cmd');
-      if (cmdParam && manDatabase[cmdParam]) {
-        renderManDoc(cmdParam);
+      if (cmdParam && manDatabase[cmdParam.toLowerCase()]) {
+        renderManDoc(cmdParam.toLowerCase());
       } else {
-        renderManDoc('arecord'); // Default showcase
+        renderManDoc('arecord');
       }
     })
     .catch(err => {
       displayBox.innerHTML = '<div style="color:var(--danger)">Error loading Linux man database.</div>';
     });
 
+  function filterCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.man-cat-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderChips();
+  }
+
   function renderChips() {
     chipsContainer.innerHTML = '';
-    const keys = Object.keys(manDatabase).sort();
-    keys.forEach(k => {
+    const allKeys = Object.keys(manDatabase).sort();
+    const filtered = currentCategory === 'all' 
+      ? allKeys 
+      : allKeys.filter(k => (CATEGORIES[currentCategory] || []).includes(k));
+
+    filtered.forEach(k => {
       const chip = document.createElement('span');
-      chip.className = 'man-chip';
+      chip.className = 'man-chip' + (searchInput.value.trim().toLowerCase() === k ? ' active' : '');
       chip.textContent = k;
       chip.onclick = () => renderManDoc(k);
       chipsContainer.appendChild(chip);
@@ -203,7 +263,6 @@ permalink: /man/
   function renderManDoc(cmd) {
     searchInput.value = cmd;
     
-    // Highlight active chip
     document.querySelectorAll('.man-chip').forEach(c => {
       c.classList.toggle('active', c.textContent === cmd);
     });
@@ -214,7 +273,6 @@ permalink: /man/
       return;
     }
 
-    // Format man sections: NAME, SYNOPSIS, DESCRIPTION, OPTIONS, EXAMPLES
     let raw = item.doc;
     raw = raw.replace(/^[A-Z][A-Z\s]{2,}$/gm, m => `<span class="man-section-title">${m}</span>`);
     raw = raw.replace(/(^\s+-[a-zA-Z0-9_\-]+(?:,\s+--[a-zA-Z0-9_\-]+)?)/gm, m => `<span class="man-option">${m}</span>`);
@@ -230,25 +288,19 @@ permalink: /man/
     displayBox.scrollTop = 0;
   }
 
-  // Live search
   searchInput.addEventListener('input', (e) => {
     let q = e.target.value.trim().toLowerCase();
-    // Strip leading "man " if user typed it
-    if (q.startsWith('man ')) {
-      q = q.replace(/^man\s+/, '').trim();
-    }
+    if (q.startsWith('man ')) q = q.replace(/^man\s+/, '').trim();
     if (!q) {
       renderManDoc('arecord');
       return;
     }
 
-    // Exact match
     if (manDatabase[q]) {
       renderManDoc(q);
       return;
     }
 
-    // Fuzzy search results
     const matches = Object.keys(manDatabase).filter(k => 
       k.includes(q) || (manDatabase[k].summary && manDatabase[k].summary.toLowerCase().includes(q))
     );
