@@ -5,7 +5,7 @@
         <span>srxz.io</span>
       </a>
       <nav class="nav-links">
-        <button class="nav-btn" onclick="toggleTerminal()" title="Toggle Cyber Terminal (HotKey: ~)">
+        <button class="nav-btn" onclick="toggleTerminal()" title="Toggle Linux CLI Terminal (HotKey: ~)">
           <span style="color:var(--hacker-green);">&gt;_</span>
           <span>CLI</span>
         </button>
@@ -14,6 +14,7 @@
           <span>SEARCH</span>
         </button>
         <a href="{{ '/' | relative_url }}" class="nav-link">~/home</a>
+        <a href="{{ '/man/' | relative_url }}" class="nav-link" style="color:var(--hacker-green);">~/man</a>
         <a href="{{ '/about/' | relative_url }}" class="nav-link">~/about</a>
         {% if site.github_username %}
         <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link">~/github</a>

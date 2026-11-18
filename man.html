@@ -1,0 +1,270 @@
+---
+layout: default
+title: Linux Man Documentation
+permalink: /man/
+---
+
+<div class="site-container">
+  <!-- Man Terminal Container -->
+  <div class="man-container">
+    <div class="terminal-titlebar">
+      <div class="terminal-dots">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+      </div>
+      <div class="terminal-sys-info">
+        LINUX MAN-DB // SYSTEM REFERENCE MANUAL
+      </div>
+    </div>
+
+    <!-- Search Controls -->
+    <div class="man-search-bar">
+      <span class="man-prompt">root@linux:~$ man</span>
+      <input type="text" id="man-search-input" placeholder="Type command name (e.g. arecord, ffmpeg, yt-dlp, grep)..." autocomplete="off" spellcheck="false">
+      <button class="nav-btn" onclick="clearManSearch()">CLEAR</button>
+    </div>
+
+    <!-- Quick Pill Tags -->
+    <div class="man-quick-chips" id="man-chips"></div>
+
+    <!-- Man Page Display Box -->
+    <div class="man-display-box" id="man-display">
+      <div class="man-loading">Loading Linux manual database...</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .man-container {
+    margin: 30px 0 60px;
+    background: #05070c;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+  }
+  .man-search-bar {
+    padding: 16px 20px;
+    background: #090d16;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .man-prompt {
+    color: var(--hacker-green);
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+  #man-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: var(--mono-font);
+    font-size: 1.05rem;
+    outline: none;
+  }
+  .man-quick-chips {
+    padding: 12px 20px;
+    background: #080a12;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-height: 120px;
+    overflow-y: auto;
+  }
+  .man-chip {
+    background: rgba(0, 255, 102, 0.08);
+    border: 1px solid var(--border-color);
+    color: var(--hacker-green);
+    font-size: 0.8rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--mono-font);
+    transition: all 0.2s;
+  }
+  .man-chip:hover, .man-chip.active {
+    background: var(--hacker-green);
+    color: #000;
+    box-shadow: 0 0 10px var(--hacker-glow);
+  }
+  .man-display-box {
+    padding: 30px;
+    min-height: 450px;
+    max-height: 720px;
+    overflow-y: auto;
+    font-family: var(--mono-font);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: #f0fdf4;
+    white-space: pre-wrap;
+    background: #030408;
+  }
+  .man-header {
+    color: var(--cyber-cyan);
+    font-weight: 700;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .man-section-title {
+    color: var(--hacker-green);
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    display: block;
+    text-shadow: 0 0 8px var(--hacker-glow);
+  }
+  .man-option {
+    color: var(--cyber-yellow);
+    font-weight: 700;
+  }
+  .man-loading {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 60px 0;
+  }
+  .man-results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .man-result-item {
+    background: #090d16;
+    border: 1px solid var(--border-color);
+    padding: 14px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .man-result-item:hover {
+    border-color: var(--hacker-green);
+    transform: translateX(4px);
+    box-shadow: 0 0 15px var(--hacker-glow);
+  }
+  .man-result-cmd {
+    color: var(--hacker-green);
+    font-weight: 800;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+  .man-result-desc {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+  }
+</style>
+
+<script>
+  let manDatabase = {};
+  const searchInput = document.getElementById('man-search-input');
+  const chipsContainer = document.getElementById('man-chips');
+  const displayBox = document.getElementById('man-display');
+
+  // Load Database
+  fetch('/assets/js/man_db.json')
+    .then(r => r.json())
+    .then(data => {
+      manDatabase = data;
+      renderChips();
+      
+      // Check URL param ?cmd=xxx
+      const params = new URLSearchParams(window.location.search);
+      const cmdParam = params.get('cmd');
+      if (cmdParam && manDatabase[cmdParam]) {
+        renderManDoc(cmdParam);
+      } else {
+        renderManDoc('arecord'); // Default showcase
+      }
+    })
+    .catch(err => {
+      displayBox.innerHTML = '<div style="color:var(--danger)">Error loading Linux man database.</div>';
+    });
+
+  function renderChips() {
+    chipsContainer.innerHTML = '';
+    const keys = Object.keys(manDatabase).sort();
+    keys.forEach(k => {
+      const chip = document.createElement('span');
+      chip.className = 'man-chip';
+      chip.textContent = k;
+      chip.onclick = () => renderManDoc(k);
+      chipsContainer.appendChild(chip);
+    });
+  }
+
+  function renderManDoc(cmd) {
+    searchInput.value = cmd;
+    
+    // Highlight active chip
+    document.querySelectorAll('.man-chip').forEach(c => {
+      c.classList.toggle('active', c.textContent === cmd);
+    });
+
+    const item = manDatabase[cmd];
+    if (!item) {
+      displayBox.innerHTML = `<div style="color:#ef4444;">No manual entry for ${cmd}</div>`;
+      return;
+    }
+
+    // Format man sections: NAME, SYNOPSIS, DESCRIPTION, OPTIONS, EXAMPLES
+    let raw = item.doc;
+    raw = raw.replace(/^[A-Z][A-Z\s]{2,}$/gm, m => `<span class="man-section-title">${m}</span>`);
+    raw = raw.replace(/(^\s+-[a-zA-Z0-9_\-]+(?:,\s+--[a-zA-Z0-9_\-]+)?)/gm, m => `<span class="man-option">${m}</span>`);
+
+    displayBox.innerHTML = `
+      <div class="man-header">
+        <span>${cmd.toUpperCase()}(1)</span>
+        <span>Linux User's Manual</span>
+        <span>${cmd.toUpperCase()}(1)</span>
+      </div>
+      <div>${raw}</div>
+    `;
+    displayBox.scrollTop = 0;
+  }
+
+  // Live search
+  searchInput.addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) {
+      renderManDoc('arecord');
+      return;
+    }
+
+    // Exact match
+    if (manDatabase[q]) {
+      renderManDoc(q);
+      return;
+    }
+
+    // Fuzzy search results
+    const matches = Object.keys(manDatabase).filter(k => 
+      k.includes(q) || (manDatabase[k].summary && manDatabase[k].summary.toLowerCase().includes(q))
+    );
+
+    if (matches.length === 0) {
+      displayBox.innerHTML = `<div style="color:var(--text-muted); padding:40px 0; text-align:center;">No manual entry matching "${q}"</div>`;
+      return;
+    }
+
+    displayBox.innerHTML = '<div class="man-results-list">' + matches.map(k => `
+      <div class="man-result-item" onclick="renderManDoc('${k}')">
+        <div class="man-result-cmd">${k}(1) &rarr;</div>
+        <div class="man-result-desc">${manDatabase[k].summary || 'Linux manual documentation'}</div>
+      </div>
+    `).join('') + '</div>';
+  });
+
+  function clearManSearch() {
+    searchInput.value = '';
+    renderManDoc('arecord');
+    searchInput.focus();
+  }
+</script>

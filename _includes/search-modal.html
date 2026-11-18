@@ -1,12 +1,16 @@
 <div id="search-modal" class="search-modal-backdrop" onclick="if(event.target===this) closeSearchModal()">
   <div class="search-modal-box">
+    <div class="search-modal-tabs">
+      <button class="search-tab-btn active" id="search-tab-posts" onclick="setModalSearchTab('posts')">📝 Blog Posts</button>
+      <button class="search-tab-btn" id="search-tab-man" onclick="setModalSearchTab('man')">🐧 Linux Man Docs</button>
+    </div>
     <div class="search-modal-header">
       <span class="search-modal-icon">🔍</span>
-      <input type="text" id="modal-search-input" placeholder="Search posts, vlogs, tags... (Esc to close)" autocomplete="off">
+      <input type="text" id="modal-search-input" placeholder="Search posts, tags, or linux commands (Esc to close)..." autocomplete="off" spellcheck="false">
       <button class="search-modal-close" onclick="closeSearchModal()" aria-label="Close search">&times;</button>
     </div>
     <div id="modal-search-results" class="search-modal-results">
-      <div class="search-empty">Type to search articles, vlogs, and notes...</div>
+      <div class="search-empty">Type to search articles or Linux manual commands...</div>
     </div>
     <div class="search-modal-footer">
       <span><kbd>ESC</kbd> to close</span>
@@ -14,3 +18,29 @@
     </div>
   </div>
 </div>
+
+<style>
+  .search-modal-tabs {
+    display: flex;
+    background: #030508;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .search-tab-btn {
+    flex: 1;
+    padding: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .search-tab-btn.active {
+    color: var(--hacker-green);
+    border-bottom-color: var(--hacker-green);
+    background: rgba(0, 255, 102, 0.05);
+  }
+</style>

@@ -1,4 +1,4 @@
-// Matrix Digital Rain & Cyber CLI Terminal
+// Matrix Digital Rain & Cyber CLI Terminal with Linux man Integration
 (function() {
   // 1. Matrix Digital Rain Canvas
   const canvas = document.createElement('canvas');
@@ -68,16 +68,17 @@
   termModal.id = 'hacker-terminal-modal';
   termModal.innerHTML = `
     <div class="term-header">
-      <span>● CYBER-CLI v2.0 // CONNECTED TO srxz-node</span>
+      <span>● LINUX-CLI // MAN-DB ENABLED // srxz-node</span>
       <span style="cursor:pointer;" onclick="toggleTerminal()">[ESC / CLOSE]</span>
     </div>
     <div class="term-log" id="term-log">
-      <div>[SYSTEM] Welcome to srxz's Cyber Terminal.</div>
-      <div>[SYSTEM] Type <span style="color:#00ff66;">'help'</span> for list of commands. Press <kbd>~</kbd> or <kbd>Esc</kbd> to toggle.</div>
+      <div>[LINUX] System initialized. Linux manual database loaded.</div>
+      <div>[HINT] Try typing: <span style="color:#00ff66;">'man arecord'</span>, <span style="color:#00ff66;">'man ffmpeg'</span>, <span style="color:#00ff66;">'man yt-dlp'</span>, <span style="color:#00ff66;">'man grep'</span></div>
+      <div>[HINT] Type <span style="color:#00ff66;">'help'</span> for all commands. Press <kbd>~</kbd> or <kbd>Esc</kbd> to toggle.</div>
       <br>
     </div>
     <div class="term-input-row">
-      <span class="term-prompt">guest@srxz-net:~$</span>
+      <span class="term-prompt">user@fedora:~$</span>
       <input type="text" id="term-cli-input" autocomplete="off" spellcheck="false">
     </div>
   `;
@@ -85,6 +86,18 @@
 
   const termInput = document.getElementById('term-cli-input');
   const termLog = document.getElementById('term-log');
+  let cachedManDb = null;
+
+  async function fetchManDb() {
+    if (cachedManDb) return cachedManDb;
+    try {
+      const res = await fetch('/assets/js/man_db.json');
+      cachedManDb = await res.json();
+      return cachedManDb;
+    } catch (e) {
+      return {};
+    }
+  }
 
   window.toggleTerminal = function() {
     termModal.classList.toggle('active');
@@ -107,50 +120,75 @@
       termInput.value = '';
       if (!raw) return;
 
-      appendLog(`<span style="color:#00ff66;">guest@srxz-net:~$</span> ${raw}`);
+      appendLog(`<span style="color:#00ff66;">user@fedora:~$</span> ${raw}`);
       const args = raw.split(' ');
       const cmd = args[0].toLowerCase();
 
       switch (cmd) {
         case 'help':
-          appendLog(`Available commands:<br>
-  - <b style="color:#00ff66;">posts</b> / <b style="color:#00ff66;">ls</b> : List all published posts & vlogs<br>
-  - <b style="color:#00ff66;">about</b> : Display author & cyber-profile<br>
-  - <b style="color:#00ff66;">matrix</b> : Toggle background Matrix rain<br>
-  - <b style="color:#00ff66;">date</b> : Show current system time<br>
-  - <b style="color:#00ff66;">clear</b> : Clear terminal screen<br>
+          appendLog(`Linux & Blog CLI commands:<br>
+  - <b style="color:#00ff66;">man &lt;command&gt;</b> : View Linux manual (e.g. man arecord, man ffmpeg, man yt-dlp, man grep)<br>
+  - <b style="color:#00ff66;">man -k &lt;keyword&gt;</b> : Search manual pages by keyword (apropos)<br>
+  - <b style="color:#00ff66;">posts</b> / <b style="color:#00ff66;">ls</b> : List blog articles and vlogs<br>
+  - <b style="color:#00ff66;">about</b> : Display creator profile<br>
+  - <b style="color:#00ff66;">matrix</b> : Toggle digital rain<br>
+  - <b style="color:#00ff66;">clear</b> : Clear terminal<br>
   - <b style="color:#00ff66;">exit</b> : Close terminal`);
+          break;
+
+        case 'man':
+          if (args.length < 2) {
+            appendLog("What manual page do you want? Example: <span style='color:#00ff66;'>man arecord</span>", "#ffbd2e");
+            break;
+          }
+          const manDb = await fetchManDb();
+          if (args[1] === '-k' || args[1] === '--apropos') {
+            const query = (args[2] || '').toLowerCase();
+            if (!query) {
+              appendLog("Usage: man -k <keyword>", "#ffbd2e");
+              break;
+            }
+            const hits = Object.keys(manDb).filter(k => k.includes(query) || (manDb[k].summary && manDb[k].summary.toLowerCase().includes(query)));
+            if (hits.length === 0) {
+              appendLog(`${query}: nothing appropriate.`, "#ef4444");
+            } else {
+              let out = `<b>Matches for "${query}":</b><br>`;
+              hits.forEach(k => {
+                out += `<a href="/man/?cmd=${k}" style="color:#00ff66; font-weight:700;">${k} (1)</a> - ${manDb[k].summary || 'command'}<br>`;
+              });
+              appendLog(out);
+            }
+          } else {
+            const target = args[1].toLowerCase();
+            const entry = manDb[target];
+            if (!entry) {
+              appendLog(`No manual entry for ${target}. Try <a href="/man/" style="color:#00f0ff;">viewing full Linux man database</a>.`, "#ef4444");
+            } else {
+              let docHtml = entry.doc
+                .replace(/^[A-Z][A-Z\s]{2,}$/gm, m => `<br><span style="color:#00ff66; font-weight:bold;">${m}</span>`)
+                .replace(/(^\s+-[a-zA-Z0-9_\-]+(?:,\s+--[a-zA-Z0-9_\-]+)?)/gm, m => `<span style="color:#fcee0a; font-weight:bold;">${m}</span>`);
+              appendLog(`<div style="background:#020306; padding:12px; border:1px solid #22c55e44; border-radius:6px; margin:6px 0; font-size:0.88rem; line-height:1.5;">${docHtml}</div>`);
+            }
+          }
           break;
 
         case 'ls':
         case 'posts':
           try {
-            const res = await fetch('/search.json');
-            const data = await res.json();
-            let html = "Available blog entries:<br>";
-            data.forEach((p, idx) => {
-              html += `[${idx+1}] <a href="${p.url}" style="color:#00f0ff;">${p.title}</a> (${p.date})<br>`;
-            });
-            appendLog(html);
+            const res = await fetch('/assets/js/man_db.json');
+            appendLog(`Blog: <a href="/" style="color:#00f0ff;">/</a> | Linux Man: <a href="/man/" style="color:#00ff66;">/man/</a><br>Type <span style="color:#00ff66;">'man arecord'</span> or <span style="color:#00ff66;">'man ffmpeg'</span> to view docs.`);
           } catch(err) {
-            appendLog("Error retrieving post manifest.", "#ef4444");
+            appendLog("Error retrieving manifest.", "#ef4444");
           }
           break;
 
         case 'about':
-          appendLog(`[IDENT] srxz // ACG Cosplayer & Tech Hacker<br>
-[VLOG] YouTube 4K Vlog & Event Coverage<br>
-[NODE] srxzsrxzsrxz.github.io<br>
-[STATUS] ARMED & READY`);
+          appendLog(`[SYSTEM] srxz.io // Linux, Cosplay, Vlogs & Cyberpunk Tools.<br>Check <a href="/man/" style="color:#00ff66;">/man/</a> for the Linux Manual Docs.`);
           break;
 
         case 'matrix':
           const on = window.toggleMatrix();
           appendLog(`[SYSTEM] Matrix Rain: ${on ? 'ENABLED' : 'DISABLED'}`);
-          break;
-
-        case 'date':
-          appendLog(new Date().toString());
           break;
 
         case 'clear':
@@ -162,15 +200,13 @@
           break;
 
         default:
-          appendLog(`command not found: ${cmd}. Type 'help' for available commands.`, '#f87171');
+          appendLog(`bash: ${cmd}: command not found. Type 'help' for command list.`, '#f87171');
       }
     }
   });
 
-  // Hotkey ~ / ` or Esc to toggle terminal
   window.addEventListener('keydown', (e) => {
     if (e.key === '`' || e.key === '~') {
-      // If not currently typing in a real textarea or input
       if (!['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName) || document.activeElement === termInput) {
         e.preventDefault();
         window.toggleTerminal();
