@@ -17,4 +17,5 @@ exclude:
   - new-post.sh
   - run-editor.sh
   - editor.py
+  - scripts/
   - .pages.yml
