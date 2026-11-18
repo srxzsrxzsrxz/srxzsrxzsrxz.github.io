@@ -3,24 +3,39 @@ layout: default
 ---
 
 <div class="site-container">
-  <section class="hero-section">
-    <div class="hero-avatar">✨</div>
+  <!-- Cosplay Hero Profile -->
+  <section class="hero-cosplay-card">
+    <div class="hero-avatar-wrapper">
+      <div class="hero-avatar">🌸</div>
+      <div class="status-indicator" title="コスプレ活動中 / Active"></div>
+    </div>
+    
+    <div class="hero-japanese-title">✨ COSPLAY &bull; ANIME VLOG &bull; 日常の記録 ✨</div>
     <h1 class="hero-title">{{ site.title }}</h1>
-    <p class="hero-bio">{{ site.description }}</p>
-    <div class="hero-tags">
-      <span class="tag-badge">🎥 Vlogs</span>
-      <span class="tag-badge">💻 Tech</span>
-      <span class="tag-badge">📝 Life Notes</span>
-      <span class="tag-badge">📱 Mobile Friendly</span>
+    <p class="hero-bio">
+      Japanese Anime &amp; Cosplay Creator &middot; 4K Cinematic Vlogs &middot; Photo Shoots &middot; Costume Making &amp; ACG Conventions.
+    </p>
+
+    <div class="cosplay-badges">
+      <span class="badge-item">👘 Cosplay Sets</span>
+      <span class="badge-item">🎥 Anime Vlogs</span>
+      <span class="badge-item">📸 Photo Shoots</span>
+      <span class="badge-item">🎪 Comiket / ACG Events</span>
+      <span class="badge-item">🎀 Wig &amp; Makeup</span>
+      <span class="badge-item">⚡ 4K 60FPS</span>
     </div>
   </section>
 
+  <!-- Posts Section with Search -->
   <section class="posts-section">
     <div class="posts-header-bar">
-      <h2 class="section-title">Latest Posts</h2>
+      <h2 class="section-title">
+        <span>🎀</span>
+        <span>Latest Posts &amp; Vlogs</span>
+      </h2>
       <div class="home-search-wrapper">
         <span class="search-inline-icon">🔍</span>
-        <input type="text" id="home-search-input" placeholder="Quick filter posts..." aria-label="Filter posts">
+        <input type="text" id="home-search-input" placeholder="Search posts or cosplay..." aria-label="Search posts">
       </div>
     </div>
 
@@ -29,11 +44,12 @@ layout: default
       <article class="post-card">
         <div class="post-card-meta">
           <time class="post-card-date" datetime="{{ post.date | date_to_xmlschema }}">
-            📅 {{ post.date | date: "%B %d, %Y" }}
+            🌸 {{ post.date | date: "%Y年%m月%d日" }}
           </time>
           {% if post.categories and post.categories.size > 0 %}
-          <span>&bull;</span>
-          <span>🏷️ {{ post.categories | join: ", " }}</span>
+            {% for cat in post.categories %}
+              <span class="category-tag">🏷️ {{ cat }}</span>
+            {% endfor %}
           {% endif %}
         </div>
         
@@ -43,17 +59,17 @@ layout: default
 
         {% if post.excerpt %}
         <p class="post-card-excerpt">
-          {{ post.excerpt | strip_html | truncatewords: 30 }}
+          {{ post.excerpt | strip_html | truncatewords: 32 }}
         </p>
         {% endif %}
       </article>
       {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">No posts yet. Run <code>./new-post.sh "My Title"</code> to add one!</p>
+      <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">まだ記事がありません。新しい記事を投稿しましょう！</p>
       {% endfor %}
     </div>
 
     <div id="no-search-results" style="display:none; text-align:center; padding: 40px 0; color:var(--text-muted);">
-      <p>🔍 No matching posts found.</p>
+      <p>🔍 一致する投稿が見つかりませんでした (No matching posts found).</p>
     </div>
   </section>
 </div>
