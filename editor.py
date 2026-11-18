@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Advanced Local Blog Studio & Editor for Jekyll / GitHub Pages
-Full-featured, standalone web application. Zero external dependencies.
+Linux Terminal Studio & Neovim-Style Blog Editor
+Zero external dependencies. Runs on Python 3 standard library.
 """
 
 import http.server
@@ -30,889 +30,925 @@ HTML_PAGE = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Blog Studio Pro &middot; srxz</title>
+  <title>NVIM // Blog Terminal Studio</title>
   <!-- Marked.js, Highlight.js for code syntax highlighting -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css">
   <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
   <style>
     :root {
-      --bg: #0b0f19;
-      --sidebar: #111827;
-      --card: #1f293d;
-      --border: #2e3a50;
-      --text: #f3f4f6;
-      --text-muted: #94a3b8;
-      --accent: #6366f1;
-      --accent-hover: #4f46e5;
-      --success: #10b981;
+      --bg: #05070c;
+      --sidebar: #090d16;
+      --card: #0e1320;
+      --border: #1e293b;
+      --text: #f0fdf4;
+      --text-muted: #64748b;
+      --hacker-green: #00ff66;
+      --hacker-glow: rgba(0, 255, 102, 0.35);
+      --cyber-cyan: #00f0ff;
+      --cyber-yellow: #fcee0a;
+      --cyber-pink: #ff007f;
       --danger: #ef4444;
-      --warning: #f59e0b;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-family: var(--mono);
       background: var(--bg);
       color: var(--text);
       display: flex;
+      flex-direction: column;
       height: 100vh;
+      overflow: hidden;
+      background-image: 
+        linear-gradient(rgba(0, 255, 102, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 102, 0.02) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Window Header (Linux / macOS style) */
+    .term-window-header {
+      height: 42px;
+      background: #020306;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      font-size: 0.82rem;
+      user-select: none;
+    }
+    .window-dots { display: flex; gap: 7px; align-items: center; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+    .dot-close { background: #ff5f56; }
+    .dot-min { background: #ffbd2e; }
+    .dot-max { background: #27c93f; }
+    .window-title { color: var(--hacker-green); font-weight: 700; display: flex; align-items: center; gap: 6px; }
+
+    /* Main Container */
+    .app-body {
+      display: flex;
+      flex: 1;
+      height: calc(100vh - 74px);
       overflow: hidden;
     }
 
-    /* Sidebar */
+    /* Sidebar (File tree) */
     #sidebar {
-      width: 320px;
+      width: 290px;
       background: var(--sidebar);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      transition: all 0.25s ease;
+      transition: margin-left 0.2s ease;
     }
-    #sidebar.collapsed { margin-left: -320px; }
+    #sidebar.collapsed { margin-left: -290px; }
 
-    .sidebar-top {
-      padding: 16px;
+    .sidebar-head {
+      padding: 10px 14px;
+      background: #050810;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
-    .brand { font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-    .brand-icon { background: linear-gradient(135deg, #6366f1, #a855f7); width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
-
-    .tabs {
+    .tab-bar {
       display: flex;
       border-bottom: 1px solid var(--border);
-      background: #0d1320;
+      background: #04060a;
     }
     .tab-btn {
       flex: 1;
-      padding: 10px;
+      padding: 8px 10px;
       background: transparent;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 700;
       border-bottom: 2px solid transparent;
       transition: 0.2s;
     }
-    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--sidebar); }
-
-    .sidebar-actions {
-      padding: 10px 14px;
-      display: flex;
-      gap: 8px;
+    .tab-btn.active {
+      color: var(--hacker-green);
+      border-bottom-color: var(--hacker-green);
+      background: rgba(0, 255, 102, 0.05);
     }
-    .search-input {
+
+    .search-box-row { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+    .term-input {
       width: 100%;
-      background: #090d16;
+      background: #020306;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
+      color: var(--hacker-green);
+      font-family: inherit;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
       outline: none;
     }
-    .search-input:focus { border-color: var(--accent); }
+    .term-input:focus { border-color: var(--hacker-green); box-shadow: 0 0 10px var(--hacker-glow); }
 
-    .posts-list {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px 14px;
-    }
-    .post-item {
-      padding: 12px 14px;
-      margin-bottom: 8px;
-      border-radius: 10px;
-      background: #141c2d;
-      border: 1px solid transparent;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      position: relative;
-    }
-    .post-item:hover { border-color: var(--accent); transform: translateX(2px); }
-    .post-item.active { background: #1e293b; border-color: var(--accent); box-shadow: 0 4px 12px rgba(99,102,241,0.15); }
-    .post-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .post-meta { font-size: 0.78rem; color: var(--text-muted); display: flex; justify-content: space-between; }
-    .delete-btn {
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      display: none;
-      padding: 4px;
+    .posts-tree { flex: 1; overflow-y: auto; padding: 8px 10px; }
+    .tree-item {
+      padding: 8px 10px;
       border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      margin-bottom: 4px;
+      border: 1px solid transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s;
     }
-    .post-item:hover .delete-btn { display: block; }
-    .delete-btn:hover { color: var(--danger); }
+    .tree-item:hover { background: #0e1424; border-color: var(--border); }
+    .tree-item.active {
+      background: #111a2e;
+      border-color: var(--hacker-green);
+      color: var(--hacker-green);
+    }
+    .tree-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .tree-del { opacity: 0; color: var(--danger); cursor: pointer; padding: 2px 6px; }
+    .tree-item:hover .tree-del { opacity: 1; }
 
-    /* Main Canvas */
-    #main {
+    /* Main Workspace */
+    #main-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      height: 100vh;
       overflow: hidden;
       background: var(--bg);
     }
 
-    /* Top Control Bar */
-    .topbar {
-      height: 60px;
-      background: var(--sidebar);
+    /* Linux Control Toolbar */
+    .term-toolbar {
+      padding: 6px 14px;
+      background: #070a12;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 18px;
-      gap: 12px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
-    .topbar-left { display: flex; align-items: center; gap: 10px; }
-    .topbar-right { display: flex; align-items: center; gap: 10px; }
-
-    .btn {
-      padding: 7px 14px;
-      border-radius: 8px;
-      font-size: 0.88rem;
-      font-weight: 600;
-      border: none;
+    .cli-btn {
+      background: rgba(0, 255, 102, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: 0.2s;
+      gap: 5px;
+      transition: all 0.15s;
     }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-hover); }
-    .btn-success { background: var(--success); color: white; }
-    .btn-success:hover { background: #059669; }
-    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-    .btn-outline:hover { background: #1e293b; border-color: var(--accent); }
-    .btn-danger { background: transparent; border: 1px solid #7f1d1d; color: #f87171; }
-    .btn-danger:hover { background: #7f1d1d; color: white; }
+    .cli-btn:hover {
+      border-color: var(--hacker-green);
+      color: var(--hacker-green);
+      box-shadow: 0 0 8px var(--hacker-glow);
+    }
+    .cli-btn-primary {
+      background: var(--hacker-green);
+      color: #000;
+      font-weight: 700;
+      border-color: var(--hacker-green);
+    }
+    .cli-btn-primary:hover {
+      background: #22c55e;
+      color: #000;
+      box-shadow: 0 0 12px var(--hacker-glow);
+    }
 
-    /* Metadata Bar */
+    /* Metadata Config Bar */
     .meta-bar {
-      padding: 10px 18px;
-      background: #101625;
+      padding: 8px 14px;
+      background: #04060c;
       border-bottom: 1px solid var(--border);
       display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
       align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
     }
-    .meta-bar input {
+    .meta-tag { color: var(--cyber-cyan); font-weight: 700; }
+    #post-title-in {
+      flex: 2;
       background: #090d16;
       border: 1px solid var(--border);
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 8px;
+      color: #fff;
+      font-family: inherit;
+      padding: 5px 10px;
+      border-radius: 4px;
       font-size: 0.9rem;
       outline: none;
     }
-    .meta-bar input:focus { border-color: var(--accent); }
-    #post-title-input { flex: 2; font-weight: 700; font-size: 1rem; }
-    #post-date-input { width: 135px; }
-    #post-tags-input { flex: 1; }
+    #post-date-in { width: 130px; }
+    #post-tags-in { flex: 1; }
 
-    /* Toolbar */
-    .toolbar {
-      padding: 8px 18px;
-      background: #0c121e;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-    .tool-group { display: flex; align-items: center; gap: 4px; border-right: 1px solid var(--border); padding-right: 8px; margin-right: 4px; }
-    .tool-icon {
-      background: transparent;
-      border: 1px solid transparent;
-      color: var(--text);
-      padding: 5px 9px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-    }
-    .tool-icon:hover { background: #1f293d; border-color: var(--border); }
-    .tool-badge { background: #1f293d; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; color: var(--text-muted); }
-
-    /* Editor + Preview Split View */
-    .workspace {
+    /* Dual Workspace (Editor + Terminal Preview) */
+    .workspace-pane {
       flex: 1;
       display: flex;
-      height: calc(100vh - 170px);
+      height: calc(100% - 75px);
       overflow: hidden;
       position: relative;
     }
-    .editor-pane {
+
+    .editor-wrapper {
       flex: 1;
       display: flex;
-      flex-direction: column;
+      background: #030408;
       border-right: 1px solid var(--border);
-      background: #080c14;
       position: relative;
+      overflow: hidden;
     }
+
+    /* Gutter line numbers */
+    .line-numbers {
+      width: 48px;
+      padding: 16px 8px 16px 0;
+      background: #020306;
+      border-right: 1px solid #141b2b;
+      color: #3b4b66;
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+    }
+
     #editor {
       flex: 1;
-      width: 100%;
-      height: 100%;
       background: transparent;
-      color: #f8fafc;
+      color: #f0fdf4;
+      font-family: inherit;
+      font-size: 0.96rem;
+      line-height: 1.65;
+      padding: 16px 20px;
       border: none;
-      padding: 24px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size: 1.02rem;
-      line-height: 1.7;
       resize: none;
       outline: none;
-      overflow-y: auto;
-    }
-    .preview-pane {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
-      background: var(--bg);
-      line-height: 1.8;
-      transition: width 0.2s ease;
-    }
-
-    /* Markdown Styling in Preview */
-    .preview-pane h1, .preview-pane h2, .preview-pane h3 { margin: 26px 0 14px; font-weight: 700; color: #fff; }
-    .preview-pane p { margin-bottom: 16px; }
-    .preview-pane blockquote {
-      border-left: 4px solid var(--accent);
-      padding: 10px 18px;
-      background: #141c2d;
-      border-radius: 0 8px 8px 0;
-      color: var(--text-muted);
-      margin: 20px 0;
-    }
-    .preview-pane table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    .preview-pane th, .preview-pane td { border: 1px solid var(--border); padding: 8px 14px; text-align: left; }
-    .preview-pane th { background: #141c2d; }
-    .preview-pane pre {
-      background: #161f30 !important;
-      border: 1px solid var(--border);
-      padding: 16px;
-      border-radius: 10px;
+      white-space: pre;
+      overflow-wrap: normal;
       overflow-x: auto;
-      margin: 20px 0;
+      overflow-y: auto;
     }
-    .preview-pane img { max-width: 100%; border-radius: 10px; margin: 16px 0; box-shadow: 0 8px 16px rgba(0,0,0,0.3); }
-    .preview-pane iframe { width: 100%; aspect-ratio: 16/9; border-radius: 10px; margin: 20px 0; border: none; }
 
-    /* Drag & Drop Overlay */
-    #drop-zone {
+    /* Drag & drop overlay */
+    #drop-overlay {
       position: absolute;
       inset: 0;
-      background: rgba(99, 102, 241, 0.85);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 255, 102, 0.85);
+      color: #000;
+      font-weight: 800;
+      font-size: 1.3rem;
       display: none;
       align-items: center;
       justify-content: center;
-      flex-direction: column;
-      gap: 12px;
       z-index: 50;
-      color: white;
-      font-size: 1.3rem;
-      font-weight: 700;
       pointer-events: none;
     }
 
-    /* Footer Stats Bar */
-    .footer-bar {
-      height: 28px;
-      background: #0a0e17;
+    /* Preview Pane */
+    .preview-wrapper {
+      flex: 1;
+      padding: 24px 30px;
+      overflow-y: auto;
+      background: #05070c;
+      font-size: 0.98rem;
+      line-height: 1.75;
+      border-left: 1px solid #141b2b;
+    }
+    .preview-wrapper h1, .preview-wrapper h2, .preview-wrapper h3 {
+      color: var(--hacker-green);
+      margin: 22px 0 10px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+    }
+    .preview-wrapper p { margin-bottom: 16px; }
+    .preview-wrapper a { color: var(--cyber-cyan); }
+    .preview-wrapper blockquote {
+      border-left: 4px solid var(--hacker-green);
+      padding: 10px 16px;
+      background: #080d16;
+      color: #94a3b8;
+      margin: 18px 0;
+    }
+    .preview-wrapper pre {
+      background: #020306 !important;
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 18px 0;
+    }
+    .preview-wrapper img {
+      max-width: 100%;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      margin: 14px 0;
+    }
+    .preview-wrapper iframe {
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: 6px;
+      border: 1px solid var(--cyber-cyan);
+      margin: 16px 0;
+    }
+
+    /* Tmux / Neovim Bottom Status Bar */
+    .tmux-status-bar {
+      height: 32px;
+      background: #020306;
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
+      padding: 0 14px;
       font-size: 0.78rem;
       color: var(--text-muted);
+      user-select: none;
     }
-    .footer-bar a { color: var(--accent); text-decoration: none; }
+    .status-left { display: flex; align-items: center; gap: 12px; }
+    .status-mode {
+      background: var(--hacker-green);
+      color: #000;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+    .status-right { display: flex; align-items: center; gap: 12px; }
 
-    /* Modal */
-    .modal-backdrop {
+    /* Interactive Vim Command Bar */
+    .vim-cmdline {
+      display: flex;
+      align-items: center;
+      padding: 4px 14px;
+      background: #04060a;
+      border-top: 1px solid #141b2b;
+      font-size: 0.82rem;
+    }
+    .vim-prompt { color: var(--hacker-green); font-weight: 800; margin-right: 6px; }
+    #vim-cmd-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    /* Modals */
+    .term-modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
+      background: rgba(2, 3, 6, 0.85);
+      backdrop-filter: blur(6px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 1000;
     }
-    .modal {
-      background: #161f30;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      width: 480px;
-      max-width: 90vw;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
-    }
-    .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 14px; }
-    .modal-body { margin-bottom: 20px; }
-    .modal-input {
-      width: 100%;
+    .term-modal {
       background: #090d16;
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-top: 8px;
-      font-size: 0.95rem;
-      outline: none;
+      border: 1px solid var(--hacker-green);
+      box-shadow: 0 0 30px rgba(0, 255, 102, 0.25);
+      border-radius: 6px;
+      width: 520px;
+      max-width: 90vw;
+      padding: 20px;
     }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+    .modal-hdr {
+      color: var(--hacker-green);
+      font-weight: 800;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
 
-    /* Notification Toast */
-    #toast {
+    /* Toast */
+    #term-toast {
       position: fixed;
-      bottom: 40px;
-      right: 24px;
-      background: #1e293b;
-      border: 1px solid var(--border);
-      padding: 12px 20px;
-      border-radius: 10px;
-      color: white;
-      font-weight: 500;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      bottom: 45px;
+      right: 20px;
+      background: #090d16;
+      border: 1px solid var(--hacker-green);
+      color: var(--hacker-green);
+      padding: 10px 18px;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
       display: none;
       z-index: 2000;
-      animation: fadeIn 0.2s ease;
     }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* Zen Mode */
-    body.zen-mode #sidebar,
-    body.zen-mode .topbar,
-    body.zen-mode .meta-bar,
-    body.zen-mode .preview-pane { display: none !important; }
-    body.zen-mode .editor-pane { width: 100vw; max-width: 800px; margin: 0 auto; border: none; }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
-  <aside id="sidebar">
-    <div class="sidebar-top">
-      <div class="brand">
-        <span class="brand-icon">⚡</span>
-        <span>Blog Studio</span>
+  <!-- Linux Window Frame -->
+  <header class="term-window-header">
+    <div class="window-dots">
+      <span class="dot dot-close" onclick="alert('Close session in terminal')" title="Close"></span>
+      <span class="dot dot-min" onclick="toggleSidebar()" title="Toggle Sidebar"></span>
+      <span class="dot dot-max" onclick="toggleZen()" title="Zen Mode"></span>
+    </div>
+    <div class="window-title">
+      <span>srxz@fedora:~/blog</span>
+      <span style="color:var(--text-muted);">&mdash;</span>
+      <span id="header-file-title" style="color:var(--cyber-cyan);">[No File]</span>
+    </div>
+    <div>
+      <span style="color:var(--text-muted); font-size:0.75rem;">PORT: 5500</span>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-head">
+        <span>EXPLORER // POSTS</span>
+        <button class="cli-btn" style="padding:2px 6px;" onclick="toggleSidebar()">&lt;</button>
       </div>
-      <button class="btn btn-outline" style="padding:4px 8px;" onclick="toggleSidebar()" title="Collapse">◀</button>
-    </div>
 
-    <!-- Mode Tabs: Published vs Drafts -->
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-published" onclick="switchTab('published')">Published (<span id="pub-count">0</span>)</button>
-      <button class="tab-btn" id="tab-drafts" onclick="switchTab('drafts')">Drafts (<span id="draft-count">0</span>)</button>
-    </div>
-
-    <div class="sidebar-actions">
-      <input type="text" class="search-input" id="search-box" placeholder="🔍 Search posts or tags..." oninput="filterPosts()">
-    </div>
-
-    <div style="padding: 0 14px 10px; display:flex; gap:8px;">
-      <button class="btn btn-primary" style="flex:1;" onclick="createNewPost(false)">+ New Post</button>
-      <button class="btn btn-outline" onclick="createNewPost(true)" title="New Draft">Draft</button>
-    </div>
-
-    <div class="posts-list" id="posts-list"></div>
-  </aside>
-
-  <!-- Main Canvas -->
-  <main id="main">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="topbar-left">
-        <button class="btn btn-outline" onclick="toggleSidebar()" title="Toggle Sidebar">☰</button>
-        <span id="file-status-indicator" style="font-size:0.85rem; color:var(--text-muted);">● Saved</span>
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-posts" onclick="switchSidebarTab('posts')">_posts (<span id="cnt-posts">0</span>)</button>
+        <button class="tab-btn" id="tab-drafts" onclick="switchSidebarTab('drafts')">_drafts (<span id="cnt-drafts">0</span>)</button>
       </div>
-      <div class="topbar-right">
-        <button class="btn btn-outline" onclick="gitPull()" id="pull-btn" title="Sync changes from phone/GitHub">⬇️ Pull</button>
-        <button class="btn btn-outline" onclick="savePost()" title="Save changes">💾 Save</button>
-        <button class="btn btn-success" onclick="openPushModal()" id="push-btn">🚀 Git Push</button>
-      </div>
-    </div>
 
-    <!-- Metadata Bar -->
-    <div class="meta-bar">
-      <input type="text" id="post-title-input" placeholder="Article Title..." oninput="markUnsaved()">
-      <input type="date" id="post-date-input" onchange="markUnsaved()">
-      <input type="text" id="post-tags-input" placeholder="Tags / Categories (e.g. vlog, tech, daily)" oninput="markUnsaved()">
-      <button class="btn btn-outline" style="font-size:0.8rem; padding:6px 10px;" onclick="toggleDraftStatus()" id="draft-toggle-btn">Move to Drafts</button>
-    </div>
+      <div class="search-box-row">
+        <input type="text" class="term-input" id="sidebar-search" placeholder="grep post name..." oninput="renderPostTree()">
+      </div>
 
-    <!-- Toolbar -->
-    <div class="toolbar">
-      <div class="tool-group">
-        <button class="tool-icon" onclick="wrapText('**', '**')" title="Bold"><b>B</b></button>
-        <button class="tool-icon" onclick="wrapText('*', '*')" title="Italic"><i>I</i></button>
-        <button class="tool-icon" onclick="wrapText('~~', '~~')" title="Strikethrough"><s>S</s></button>
+      <div style="padding:6px 12px; display:flex; gap:6px;">
+        <button class="cli-btn cli-btn-primary" style="flex:1;" onclick="createNewFile(false)">+ :new</button>
+        <button class="cli-btn" onclick="createNewFile(true)">+ :draft</button>
       </div>
-      <div class="tool-group">
-        <button class="tool-icon" onclick="insertLine('## ')" title="Heading 2">H2</button>
-        <button class="tool-icon" onclick="insertLine('### ')" title="Heading 3">H3</button>
-        <button class="tool-icon" onclick="insertLine('> ')" title="Quote">Quote</button>
-        <button class="tool-icon" onclick="wrapText('`', '`')" title="Inline Code">Code</button>
-        <button class="tool-icon" onclick="insertCodeBlock()" title="Code Block">&lt;/&gt;</button>
-      </div>
-      <div class="tool-group">
-        <button class="tool-icon" onclick="openYoutubeModal()" title="Insert YouTube Vlog">🎥 Vlog</button>
-        <button class="tool-icon" onclick="document.getElementById('file-upload').click()" title="Upload Image">🖼️ Image</button>
-        <button class="tool-icon" onclick="insertTable()" title="Insert Table">📊 Table</button>
-        <button class="tool-icon" onclick="insertCallout()" title="Note / Tip / Alert">💡 Callout</button>
-      </div>
-      <input type="file" id="file-upload" accept="image/*" style="display:none;" onchange="handleImageFile(this.files[0])">
-      <span style="flex:1;"></span>
-      <button class="tool-icon" onclick="toggleZenMode()" title="Zen / Fullscreen Mode">🧘 Zen</button>
-      <button class="tool-icon" onclick="togglePreviewSplit()" id="preview-toggle-btn" title="Toggle Preview">👁️ Preview</button>
-    </div>
 
-    <!-- Workspace -->
-    <div class="workspace" id="workspace">
-      <div class="editor-pane" id="editor-pane">
-        <textarea id="editor" placeholder="Write markdown here... (Drag & Drop or Ctrl+V images directly!)"></textarea>
-        <div id="drop-zone">
-          <span>📥 Drop Image to Upload</span>
+      <div class="posts-tree" id="posts-tree"></div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main id="main-content">
+      <!-- Toolbar -->
+      <div class="term-toolbar">
+        <button class="cli-btn" onclick="toggleSidebar()">[ 📁 Tree ]</button>
+        <button class="cli-btn cli-btn-primary" onclick="saveFile()">[ :w Save ]</button>
+        <button class="cli-btn" onclick="gitPull()" id="pull-btn">[ ⬇️ git pull ]</button>
+        <button class="cli-btn" onclick="openPushModal()" id="push-btn" style="color:var(--hacker-green);">[ 🚀 git push ]</button>
+        <span style="color:var(--border);">|</span>
+        <button class="cli-btn" onclick="openYtModal()">[ 🎥 vlog ]</button>
+        <button class="cli-btn" onclick="document.getElementById('img-file-in').click()">[ 🖼️ img ]</button>
+        <button class="cli-btn" onclick="insertSnippet('table')">[ 📊 table ]</button>
+        <button class="cli-btn" onclick="insertSnippet('code')">[ &lt;/&gt; code ]</button>
+        <button class="cli-btn" onclick="window.open('/man/', '_blank')">[ 🐧 man-db ]</button>
+        <input type="file" id="img-file-in" accept="image/*" style="display:none;" onchange="handleImageUpload(this.files[0])">
+        <span style="flex:1;"></span>
+        <button class="cli-btn" onclick="togglePreview()" id="prev-btn">[ 👁️ Preview ]</button>
+        <button class="cli-btn" onclick="toggleZen()">[ 🧘 Zen ]</button>
+      </div>
+
+      <!-- Metadata Header -->
+      <div class="meta-bar">
+        <span class="meta-tag">TITLE:</span>
+        <input type="text" id="post-title-in" placeholder="Article Title (e.g. My Next Cosplay Vlog)" oninput="updateDirty(true)">
+        <span class="meta-tag">DATE:</span>
+        <input type="date" class="term-input" id="post-date-in" onchange="updateDirty(true)">
+        <span class="meta-tag">TAGS:</span>
+        <input type="text" class="term-input" id="post-tags-in" placeholder="Cosplay, Vlog, Linux" oninput="updateDirty(true)">
+      </div>
+
+      <!-- Editor + Preview -->
+      <div class="workspace-pane">
+        <div class="editor-wrapper" id="editor-wrapper">
+          <div class="line-numbers" id="line-numbers">1</div>
+          <textarea id="editor" placeholder="# Write markdown here... (Ctrl+V or Drag & Drop images directly!)" spellcheck="false"></textarea>
+          <div id="drop-overlay">📥 DROP IMAGE TO UPLOAD</div>
         </div>
+        <div class="preview-wrapper" id="preview-wrapper"></div>
       </div>
-      <div class="preview-pane" id="preview-pane"></div>
-    </div>
 
-    <!-- Footer Stats -->
-    <footer class="footer-bar">
-      <div>
-        <span id="word-count">0 words</span> &middot;
-        <span id="read-time">1 min read</span> &middot;
-        <span id="char-count">0 chars</span>
+      <!-- Vim Command Line -->
+      <div class="vim-cmdline">
+        <span class="vim-prompt">:</span>
+        <input type="text" id="vim-cmd-input" placeholder="Type vim commands (:w, :push, :pull, :man grep, :new, :zen, :help)" autocomplete="off" spellcheck="false">
       </div>
-      <div>
-        <a href="https://srxzsrxzsrxz.github.io" target="_blank">🌐 View Live Blog &rarr;</a>
-      </div>
-    </footer>
-  </main>
+
+      <!-- Tmux Status Bar -->
+      <footer class="tmux-status-bar">
+        <div class="status-left">
+          <span class="status-mode" id="status-mode">NORMAL</span>
+          <span id="status-file">untitled.md</span>
+          <span style="color:var(--border);">|</span>
+          <span id="dirty-indicator" style="color:var(--hacker-green);">[OK]</span>
+        </div>
+        <div class="status-right">
+          <span id="metric-words">0 words</span>
+          <span id="metric-chars">0 chars</span>
+          <span id="cursor-pos">LN 1, COL 1</span>
+          <span style="color:var(--cyber-cyan);">UTF-8</span>
+          <a href="https://srxzsrxzsrxz.github.io" target="_blank" style="color:var(--hacker-green); text-decoration:none;">[🌐 live-site]</a>
+        </div>
+      </footer>
+    </main>
+  </div>
 
   <!-- YouTube Modal -->
-  <div class="modal-backdrop" id="yt-modal">
-    <div class="modal">
-      <div class="modal-title">🎥 Embed YouTube Vlog</div>
-      <div class="modal-body">
-        <label>YouTube Video Link or ID:</label>
-        <input type="text" class="modal-input" id="yt-url-input" placeholder="e.g. https://www.youtube.com/watch?v=jNQXAC9IVRw">
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('yt-modal')">Cancel</button>
-        <button class="btn btn-primary" onclick="confirmYoutubeEmbed()">Insert Video</button>
+  <div class="term-modal-backdrop" id="modal-yt">
+    <div class="term-modal">
+      <div class="modal-hdr">&gt; INSERT_YOUTUBE_VLOG</div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Paste YouTube Video Link or ID:</p>
+      <input type="text" class="term-input" id="yt-in" style="margin-bottom:14px;" placeholder="https://www.youtube.com/watch?v=...">
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="cli-btn" onclick="closeModal('modal-yt')">CANCEL</button>
+        <button class="cli-btn cli-btn-primary" onclick="confirmYt()">INSERT</button>
       </div>
     </div>
   </div>
 
   <!-- Git Push Modal -->
-  <div class="modal-backdrop" id="push-modal">
-    <div class="modal">
-      <div class="modal-title">🚀 Publish to GitHub Pages</div>
-      <div class="modal-body">
-        <label>Commit Message:</label>
-        <input type="text" class="modal-input" id="commit-msg-input" value="Update blog via Studio">
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('push-modal')">Cancel</button>
-        <button class="btn btn-success" id="confirm-push-btn" onclick="confirmGitPush()">Push & Publish</button>
+  <div class="term-modal-backdrop" id="modal-push">
+    <div class="term-modal">
+      <div class="modal-hdr">&gt; GIT_COMMIT_AND_PUSH</div>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Commit Message:</p>
+      <input type="text" class="term-input" id="push-msg-in" style="margin-bottom:14px;" value="Update blog via Linux Studio">
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="cli-btn" onclick="closeModal('modal-push')">CANCEL</button>
+        <button class="cli-btn cli-btn-primary" id="push-confirm-btn" onclick="confirmPush()">PUSH TO ORIGIN</button>
       </div>
     </div>
   </div>
 
-  <div id="toast"></div>
+  <!-- Linux Man Lookup Modal inside Editor -->
+  <div class="term-modal-backdrop" id="modal-man">
+    <div class="term-modal" style="width:720px;">
+      <div class="modal-hdr" id="man-modal-title">&gt; MAN_PAGE_LOOKUP</div>
+      <div id="man-modal-body" style="font-size:0.85rem; line-height:1.55; max-height:420px; overflow-y:auto; background:#020306; padding:14px; border:1px solid var(--border); border-radius:4px; margin-bottom:12px;"></div>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="cli-btn" onclick="closeModal('modal-man')">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="term-toast"></div>
 
   <script>
-    let currentTab = "published";
-    let currentFilename = "";
-    let isCurrentDraft = false;
-    let allPosts = [];
-    let isUnsaved = false;
+    let currentTab = 'posts';
+    let currentFile = '';
+    let isDraft = false;
+    let allEntries = [];
+    let isDirty = false;
 
     const editor = document.getElementById('editor');
-    const preview = document.getElementById('preview-pane');
-    const titleInput = document.getElementById('post-title-input');
-    const dateInput = document.getElementById('post-date-input');
-    const tagsInput = document.getElementById('post-tags-input');
+    const lineNums = document.getElementById('line-numbers');
+    const preview = document.getElementById('preview-wrapper');
+    const titleIn = document.getElementById('post-title-in');
+    const dateIn = document.getElementById('post-date-in');
+    const tagsIn = document.getElementById('post-tags-in');
+    const vimCmd = document.getElementById('vim-cmd-input');
 
-    // Syntax highlighting config with marked
+    // Marked.js + Highlight.js
     marked.setOptions({
       highlight: function(code, lang) {
-        if (lang && hljs.getLanguage(lang)) {
-          return hljs.highlight(code, { language: lang }).value;
-        }
+        if (lang && hljs.getLanguage(lang)) return hljs.highlight(code, { language: lang }).value;
         return hljs.highlightAuto(code).value;
       },
       breaks: true
     });
 
-    editor.addEventListener('input', () => {
-      markUnsaved();
-      renderPreview();
-      updateStats();
-    });
-
-    function markUnsaved() {
-      isUnsaved = true;
-      document.getElementById('file-status-indicator').textContent = '○ Unsaved changes';
-      document.getElementById('file-status-indicator').style.color = 'var(--warning)';
+    function updateLineNumbers() {
+      const lines = editor.value.split('\\n').length;
+      let out = '';
+      for (let i = 1; i <= lines; i++) out += i + '<br>';
+      lineNums.innerHTML = out;
     }
 
-    function markSaved() {
-      isUnsaved = false;
-      document.getElementById('file-status-indicator').textContent = '● Saved';
-      document.getElementById('file-status-indicator').style.color = 'var(--success)';
+    editor.addEventListener('scroll', () => {
+      lineNums.scrollTop = editor.scrollTop;
+    });
+
+    editor.addEventListener('input', () => {
+      updateDirty(true);
+      updateLineNumbers();
+      renderPreview();
+      updateMetrics();
+    });
+
+    editor.addEventListener('keyup', updateCursorPos);
+    editor.addEventListener('click', updateCursorPos);
+
+    function updateCursorPos() {
+      const pos = editor.selectionStart;
+      const text = editor.value.substr(0, pos);
+      const line = text.split('\\n').length;
+      const col = pos - text.lastIndexOf('\\n');
+      document.getElementById('cursor-pos').textContent = `LN ${line}, COL ${col}`;
+    }
+
+    function updateDirty(dirty) {
+      isDirty = dirty;
+      const d = document.getElementById('dirty-indicator');
+      if (dirty) {
+        d.textContent = '[MODIFIED*]';
+        d.style.color = 'var(--cyber-yellow)';
+      } else {
+        d.textContent = '[SAVED]';
+        d.style.color = 'var(--hacker-green)';
+      }
     }
 
     function renderPreview() {
-      const text = editor.value;
-      preview.innerHTML = marked.parse(text || "*Start writing to see live preview...*");
+      preview.innerHTML = marked.parse(editor.value || "*# Terminal output empty*");
     }
 
-    function updateStats() {
-      const text = editor.value.trim();
-      const words = text ? text.split(/\\s+/).length : 0;
-      const chars = text.length;
-      const readMin = Math.max(1, Math.ceil(words / 200));
-      document.getElementById('word-count').textContent = words + ' words';
-      document.getElementById('char-count').textContent = chars + ' chars';
-      document.getElementById('read-time').textContent = readMin + ' min read';
+    function updateMetrics() {
+      const val = editor.value.trim();
+      const words = val ? val.split(/\\s+/).length : 0;
+      document.getElementById('metric-words').textContent = words + ' words';
+      document.getElementById('metric-chars').textContent = val.length + ' chars';
     }
 
-    function showToast(msg, isErr = false) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.style.borderColor = isErr ? 'var(--danger)' : 'var(--success)';
-      toast.style.display = 'block';
-      setTimeout(() => { toast.style.display = 'none'; }, 3500);
+    function toast(msg, isErr = false) {
+      const t = document.getElementById('term-toast');
+      t.textContent = (isErr ? '[ERR] ' : '[OK] ') + msg;
+      t.style.borderColor = isErr ? 'var(--danger)' : 'var(--hacker-green)';
+      t.style.color = isErr ? 'var(--danger)' : 'var(--hacker-green)';
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
     }
 
-    // Load Posts
-    async function fetchPosts() {
+    // Load Posts & Drafts
+    async function loadTree() {
       try {
         const res = await fetch('/api/posts');
-        const data = await res.json();
-        allPosts = data;
-        document.getElementById('pub-count').textContent = data.filter(p => !p.is_draft).length;
-        document.getElementById('draft-count').textContent = data.filter(p => p.is_draft).length;
-        renderPostsList();
-      } catch (err) {
-        showToast("Error loading posts", true);
+        allEntries = await res.json();
+        document.getElementById('cnt-posts').textContent = allEntries.filter(x => !x.is_draft).length;
+        document.getElementById('cnt-drafts').textContent = allEntries.filter(x => x.is_draft).length;
+        renderPostTree();
+      } catch (e) {
+        toast("Failed loading post directory", true);
       }
     }
 
-    function switchTab(tab) {
+    function switchSidebarTab(tab) {
       currentTab = tab;
-      document.getElementById('tab-published').classList.toggle('active', tab === 'published');
+      document.getElementById('tab-posts').classList.toggle('active', tab === 'posts');
       document.getElementById('tab-drafts').classList.toggle('active', tab === 'drafts');
-      renderPostsList();
+      renderPostTree();
     }
 
-    function renderPostsList() {
-      const listEl = document.getElementById('posts-list');
-      const query = document.getElementById('search-box').value.toLowerCase();
-      const filtered = allPosts.filter(p => {
+    function renderPostTree() {
+      const tree = document.getElementById('posts-tree');
+      const q = document.getElementById('sidebar-search').value.toLowerCase();
+      const list = allEntries.filter(p => {
         const matchesTab = currentTab === 'drafts' ? p.is_draft : !p.is_draft;
-        const matchesQuery = (p.title || '').toLowerCase().includes(query) || (p.categories || []).some(c => c.toLowerCase().includes(query));
-        return matchesTab && matchesQuery;
+        const matchesQ = (p.title || '').toLowerCase().includes(q) || (p.filename || '').toLowerCase().includes(q);
+        return matchesTab && matchesQ;
       });
 
-      listEl.innerHTML = "";
-      if (filtered.length === 0) {
-        listEl.innerHTML = '<div style="color:var(--text-muted); font-size:0.85rem; text-align:center; padding:20px;">No articles found</div>';
+      tree.innerHTML = '';
+      if (list.length === 0) {
+        tree.innerHTML = '<div style="color:var(--text-muted); padding:14px; font-size:0.8rem;">[empty]</div>';
         return;
       }
 
-      filtered.forEach(p => {
-        const item = document.createElement('div');
-        item.className = 'post-item' + (p.filename === currentFilename ? ' active' : '');
-        item.innerHTML = `
-          <button class="delete-btn" onclick="event.stopPropagation(); deletePost('${p.filename}', ${p.is_draft})" title="Delete">🗑️</button>
-          <div class="post-title">${p.title || p.filename}</div>
-          <div class="post-meta">
-            <span>📅 ${p.date || ''}</span>
-            <span>🏷️ ${(p.categories || []).slice(0, 2).join(', ')}</span>
-          </div>
+      list.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'tree-item' + (item.filename === currentFile ? ' active' : '');
+        el.innerHTML = `
+          <span class="tree-name">&gt; ${item.title || item.filename}</span>
+          <span class="tree-del" onclick="event.stopPropagation(); deleteEntry('${item.filename}', ${item.is_draft})" title="rm">[x]</span>
         `;
-        item.onclick = () => loadPost(p.filename, p.is_draft);
-        listEl.appendChild(item);
+        el.onclick = () => openFile(item.filename, item.is_draft);
+        tree.appendChild(el);
       });
     }
 
-    function filterPosts() {
-      renderPostsList();
-    }
-
-    async function loadPost(filename, isDraft) {
-      if (isUnsaved && !confirm("You have unsaved changes. Discard and switch post?")) return;
+    async function openFile(filename, draft) {
+      if (isDirty && !confirm("File has unsaved changes. Discard and switch?")) return;
       try {
-        const res = await fetch(`/api/post?name=${encodeURIComponent(filename)}&is_draft=${isDraft}`);
+        const res = await fetch(`/api/post?name=${encodeURIComponent(filename)}&is_draft=${draft}`);
         const data = await res.json();
-        currentFilename = filename;
-        isCurrentDraft = isDraft;
-        titleInput.value = data.title || "";
-        dateInput.value = data.date || new Date().toISOString().split('T')[0];
-        tagsInput.value = (data.categories || []).join(', ');
+        currentFile = filename;
+        isDraft = draft;
+        titleIn.value = data.title || "";
+        dateIn.value = data.date || new Date().toISOString().split('T')[0];
+        tagsIn.value = (data.categories || []).join(', ');
         editor.value = data.body || "";
-        document.getElementById('draft-toggle-btn').textContent = isDraft ? "Publish to Posts" : "Move to Drafts";
-        markSaved();
+        document.getElementById('header-file-title').textContent = filename;
+        document.getElementById('status-file').textContent = filename;
+        updateDirty(false);
+        updateLineNumbers();
         renderPreview();
-        updateStats();
-        renderPostsList();
-      } catch (err) {
-        showToast("Error loading file", true);
+        updateMetrics();
+        renderPostTree();
+      } catch (e) {
+        toast("Error opening file", true);
       }
     }
 
-    function createNewPost(isDraft = false) {
-      if (isUnsaved && !confirm("Discard unsaved changes?")) return;
-      currentFilename = "";
-      isCurrentDraft = isDraft;
-      titleInput.value = "";
-      dateInput.value = new Date().toISOString().split('T')[0];
-      tagsInput.value = "";
-      editor.value = "# Hello World\\n\\nStart writing your new post or vlog note...";
-      document.getElementById('draft-toggle-btn').textContent = isDraft ? "Publish to Posts" : "Move to Drafts";
-      titleInput.focus();
-      markSaved();
+    function createNewFile(draft = false) {
+      if (isDirty && !confirm("Discard unsaved changes?")) return;
+      currentFile = "";
+      isDraft = draft;
+      titleIn.value = "";
+      dateIn.value = new Date().toISOString().split('T')[0];
+      tagsIn.value = "";
+      editor.value = "# Hello World\\n\\nWrite markdown or vlog notes here...";
+      document.getElementById('header-file-title').textContent = draft ? "[NEW_DRAFT]" : "[NEW_POST]";
+      document.getElementById('status-file').textContent = "untitled.md";
+      titleIn.focus();
+      updateDirty(false);
+      updateLineNumbers();
       renderPreview();
-      updateStats();
-      renderPostsList();
+      updateMetrics();
+      renderPostTree();
     }
 
-    async function savePost() {
-      const title = titleInput.value.trim();
+    async function saveFile() {
+      const title = titleIn.value.trim();
       if (!title) {
-        showToast("Please enter an article title!", true);
-        titleInput.focus();
+        toast("Missing post title!", true);
+        titleIn.focus();
         return;
       }
-      const date = dateInput.value || new Date().toISOString().split('T')[0];
-      const categories = tagsInput.value.split(',').map(s => s.trim()).filter(Boolean);
+      const date = dateIn.value || new Date().toISOString().split('T')[0];
+      const categories = tagsIn.value.split(',').map(s => s.trim()).filter(Boolean);
       const body = editor.value;
 
       try {
         const res = await fetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: currentFilename,
-            is_draft: isCurrentDraft,
-            title, date, categories, body
-          })
+          body: JSON.stringify({ filename: currentFile, is_draft: isDraft, title, date, categories, body })
         });
-        const resData = await res.json();
-        if (resData.ok) {
-          currentFilename = resData.filename;
-          markSaved();
-          showToast("💾 Saved successfully!");
-          await fetchPosts();
+        const d = await res.json();
+        if (d.ok) {
+          currentFile = d.filename;
+          document.getElementById('header-file-title').textContent = d.filename;
+          document.getElementById('status-file').textContent = d.filename;
+          updateDirty(false);
+          toast("File written successfully (:w)");
+          await loadTree();
         } else {
-          showToast("Failed to save: " + resData.error, true);
+          toast(d.error, true);
         }
-      } catch (err) {
-        showToast("Network error saving post", true);
+      } catch (e) {
+        toast("Write failure", true);
       }
     }
 
-    async function deletePost(filename, isDraft) {
-      if (!confirm(`Are you sure you want to delete ${filename}?`)) return;
+    async function deleteEntry(filename, draft) {
+      if (!confirm(`Are you sure you want to rm ${filename}?`)) return;
       try {
         const res = await fetch('/api/delete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ filename, is_draft: isDraft })
+          body: JSON.stringify({ filename, is_draft: draft })
         });
         const d = await res.json();
         if (d.ok) {
-          showToast("🗑️ Post deleted");
-          if (currentFilename === filename) createNewPost(false);
-          await fetchPosts();
+          toast("File deleted (:rm)");
+          if (currentFile === filename) createNewFile(false);
+          loadTree();
         }
       } catch (e) {
-        showToast("Error deleting file", true);
+        toast("Delete error", true);
       }
     }
 
-    function toggleDraftStatus() {
-      isCurrentDraft = !isCurrentDraft;
-      document.getElementById('draft-toggle-btn').textContent = isCurrentDraft ? "Publish to Posts" : "Move to Drafts";
-      savePost();
-    }
-
-    // Git Operations
+    // Git Actions
     async function gitPull() {
       const btn = document.getElementById('pull-btn');
-      btn.textContent = "⏳ Pulling...";
-      btn.disabled = true;
+      btn.textContent = "[ ⏳ pulling... ]";
       try {
         const res = await fetch('/api/git-pull', { method: 'POST' });
-        const data = await res.json();
-        if (data.ok) {
-          showToast("✅ Successfully pulled latest changes!");
-          fetchPosts();
+        const d = await res.json();
+        if (d.ok) {
+          toast("Git pulled successfully (:pull)");
+          loadTree();
         } else {
-          showToast("Pull failed: " + data.output, true);
+          toast("Pull failed: " + d.output, true);
         }
-      } catch (err) {
-        showToast("Network error pulling Git", true);
+      } catch (e) {
+        toast("Network error", true);
       } finally {
-        btn.textContent = "⬇️ Pull";
-        btn.disabled = false;
+        btn.textContent = "[ ⬇️ git pull ]";
       }
     }
 
     function openPushModal() {
-      document.getElementById('push-modal').style.display = 'flex';
+      document.getElementById('modal-push').style.display = 'flex';
+      document.getElementById('push-msg-in').focus();
     }
 
-    async function confirmGitPush() {
-      const msg = document.getElementById('commit-msg-input').value.trim() || "Update blog via Studio";
-      const btn = document.getElementById('confirm-push-btn');
-      btn.textContent = "⏳ Pushing...";
-      btn.disabled = true;
+    async function confirmPush() {
+      const msg = document.getElementById('push-msg-in').value.trim() || "Update blog via Linux Studio";
+      const btn = document.getElementById('push-confirm-btn');
+      btn.textContent = "PUSHING...";
       try {
-        // Save first
-        await savePost();
+        await saveFile();
         const res = await fetch('/api/git-push', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: msg })
         });
-        const data = await res.json();
-        if (data.ok) {
-          closeModal('push-modal');
-          showToast("🚀 Successfully deployed to GitHub Pages!");
+        const d = await res.json();
+        if (d.ok) {
+          closeModal('modal-push');
+          toast("Pushed to GitHub Pages (:push)");
         } else {
-          showToast("Push failed: " + data.output, true);
+          toast("Push error: " + d.output, true);
         }
       } catch (e) {
-        showToast("Network error pushing to Git", true);
+        toast("Git push network failure", true);
       } finally {
-        btn.textContent = "Push & Publish";
-        btn.disabled = false;
+        btn.textContent = "PUSH TO ORIGIN";
       }
     }
 
-    // Image Upload (Paste / Drag & Drop / File Input)
-    async function handleImageFile(file) {
+    // Clipboard & Drag-and-drop Image Upload
+    async function handleImageUpload(file) {
       if (!file || !file.type.startsWith('image/')) return;
-      showToast("⏳ Uploading image...");
+      toast("Uploading image to assets/images/...");
       const reader = new FileReader();
       reader.onload = async () => {
         try {
           const res = await fetch('/api/upload-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: file.name,
-              data: reader.result
-            })
+            body: JSON.stringify({ name: file.name, data: reader.result })
           });
           const d = await res.json();
           if (d.ok) {
-            wrapText(`![${file.name}](${d.url})\\n`);
-            showToast("🖼️ Image uploaded & inserted!");
+            insertSnippet(`![${file.name}](${d.url})\\n`);
+            toast("Image saved: " + d.url);
           } else {
-            showToast("Upload failed: " + d.error, true);
+            toast(d.error, true);
           }
         } catch (e) {
-          showToast("Error uploading image", true);
+          toast("Upload failed", true);
         }
       };
       reader.readAsDataURL(file);
     }
 
-    // Clipboard Paste Listener
     editor.addEventListener('paste', (e) => {
       const items = (e.clipboardData || e.originalEvent.clipboardData).items;
       for (const item of items) {
         if (item.kind === 'file' && item.type.startsWith('image/')) {
           e.preventDefault();
-          const file = item.getAsFile();
-          handleImageFile(file);
+          handleImageUpload(item.getAsFile());
           return;
         }
       }
     });
 
-    // Drag and Drop Images Listener
-    const dropZone = document.getElementById('drop-zone');
-    const editorPane = document.getElementById('editor-pane');
-
-    ['dragenter', 'dragover'].forEach(name => {
-      editorPane.addEventListener(name, (e) => { e.preventDefault(); dropZone.style.display = 'flex'; });
-    });
-    ['dragleave', 'drop'].forEach(name => {
-      editorPane.addEventListener(name, (e) => { e.preventDefault(); dropZone.style.display = 'none'; });
-    });
-    editorPane.addEventListener('drop', (e) => {
-      const files = e.dataTransfer.files;
-      if (files.length > 0) handleImageFile(files[0]);
+    const dropOverlay = document.getElementById('drop-overlay');
+    const editorWrapper = document.getElementById('editor-wrapper');
+    ['dragenter', 'dragover'].forEach(n => editorWrapper.addEventListener(n, (e) => { e.preventDefault(); dropOverlay.style.display = 'flex'; }));
+    ['dragleave', 'drop'].forEach(n => editorWrapper.addEventListener(n, (e) => { e.preventDefault(); dropOverlay.style.display = 'none'; }));
+    editorWrapper.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files.length > 0) handleImageUpload(e.dataTransfer.files[0]);
     });
 
-    // Markdown Formatter Helpers
-    function wrapText(before, after = "") {
+    function insertSnippet(type) {
+      if (type === 'table') {
+        insertText('\\n| Option | Type | Description |\\n| :----- | :--- | :---------- |\\n| -f     | str  | Format code  |\\n| -v     | bool | Verbose mode |\\n');
+      } else if (type === 'code') {
+        insertText('\\n```bash\\n# Execute command\\nffmpeg -i input.mp4 output.mp3\\n```\\n');
+      }
+    }
+
+    function insertText(snippet) {
       const start = editor.selectionStart;
       const end = editor.selectionEnd;
-      const text = editor.value;
-      const sel = text.substring(start, end);
-      editor.setRangeText(before + sel + after, start, end, 'end');
-      markUnsaved();
+      editor.setRangeText(snippet, start, end, 'end');
+      updateDirty(true);
+      updateLineNumbers();
       renderPreview();
       editor.focus();
     }
 
-    function insertLine(prefix) {
-      const start = editor.selectionStart;
-      const text = editor.value;
-      const lineStart = text.lastIndexOf('\\n', start - 1) + 1;
-      editor.setRangeText(prefix, lineStart, lineStart, 'end');
-      markUnsaved();
-      renderPreview();
-      editor.focus();
+    function openYtModal() {
+      document.getElementById('modal-yt').style.display = 'flex';
+      document.getElementById('yt-in').focus();
     }
 
-    function insertCodeBlock() {
-      wrapText('\\n```javascript\\n', '\\n```\\n');
-    }
-
-    function insertTable() {
-      wrapText('\\n| Column 1 | Column 2 | Column 3 |\\n| -------- | -------- | -------- |\\n| Item 1   | Value 1  | Info 1   |\\n| Item 2   | Value 2  | Info 2   |\\n');
-    }
-
-    function insertCallout() {
-      wrapText('\\n> [!NOTE]\\n> Write your alert or special note here.\\n');
-    }
-
-    function openYoutubeModal() {
-      document.getElementById('yt-modal').style.display = 'flex';
-      document.getElementById('yt-url-input').focus();
-    }
-
-    function confirmYoutubeEmbed() {
-      const url = document.getElementById('yt-url-input').value.trim();
+    function confirmYt() {
+      const url = document.getElementById('yt-in').value.trim();
       if (!url) return;
       let vid = url;
       if (url.includes('youtu.be/')) vid = url.split('youtu.be/')[1].split(/[?#]/)[0];
       else if (url.includes('watch?v=')) vid = url.split('watch?v=')[1].split('&')[0];
-
-      wrapText(`\\n<iframe width="100%" height="380" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe>\\n`);
-      closeModal('yt-modal');
-      document.getElementById('yt-url-input').value = "";
+      insertText(`\\n<iframe width="100%" height="380" src="https://www.youtube.com/embed/${vid}" frameborder="0" allowfullscreen></iframe>\\n`);
+      closeModal('modal-yt');
+      document.getElementById('yt-in').value = '';
     }
 
     function closeModal(id) {
@@ -923,30 +959,103 @@ HTML_PAGE = """<!DOCTYPE html>
       document.getElementById('sidebar').classList.toggle('collapsed');
     }
 
-    function toggleZenMode() {
-      document.body.classList.toggle('zen-mode');
+    function togglePreview() {
+      const p = document.getElementById('preview-wrapper');
+      p.style.display = p.style.display === 'none' ? 'block' : 'none';
     }
 
-    function togglePreviewSplit() {
-      const prev = document.getElementById('preview-pane');
-      const isVisible = prev.style.display !== 'none';
-      prev.style.display = isVisible ? 'none' : 'block';
-      document.getElementById('preview-toggle-btn').style.opacity = isVisible ? '0.5' : '1';
+    function toggleZen() {
+      document.getElementById('sidebar').classList.toggle('collapsed');
+      togglePreview();
     }
 
-    // Keyboard Shortcuts: Ctrl+S to save
+    // Vim Command Line Controller
+    vimCmd.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const cmd = vimCmd.value.trim().replace(/^:/, '');
+        vimCmd.value = '';
+        if (!cmd) return;
+
+        const parts = cmd.split(/\\s+/);
+        const action = parts[0].toLowerCase();
+
+        switch (action) {
+          case 'w':
+          case 'write':
+            saveFile();
+            break;
+          case 'wq':
+          case 'push':
+            confirmPush();
+            break;
+          case 'pull':
+            gitPull();
+            break;
+          case 'new':
+            createNewFile(false);
+            break;
+          case 'draft':
+            createNewFile(true);
+            break;
+          case 'q':
+          case 'quit':
+            toast("Session active on :5500");
+            break;
+          case 'zen':
+            toggleZen();
+            break;
+          case 'tree':
+            toggleSidebar();
+            break;
+          case 'man':
+            if (parts.length < 2) {
+              toast("Usage: :man <command> (e.g. :man grep)", true);
+            } else {
+              showManModal(parts[1].toLowerCase());
+            }
+            break;
+          case 'help':
+            toast("Vim commands: :w, :wq, :push, :pull, :man <cmd>, :new, :zen");
+            break;
+          default:
+            toast("Unknown vim command :" + action, true);
+        }
+      }
+    });
+
+    async function showManModal(cmd) {
+      try {
+        const res = await fetch('/assets/js/man_db.json');
+        const db = await res.json();
+        const item = db[cmd];
+        if (!item) {
+          toast("No man entry for " + cmd, true);
+          return;
+        }
+        document.getElementById('man-modal-title').textContent = `> MAN_${cmd.toUpperCase()}(1)`;
+        let html = item.doc
+          .replace(/^[A-Z][A-Z\\s]{2,}$/gm, m => `<br><span style="color:var(--hacker-green); font-weight:bold;">${m}</span>`)
+          .replace(/(^\\s+-[a-zA-Z0-9_\\-]+(?:,\\s+--[a-zA-Z0-9_\\-]+)?)/gm, m => `<span style="color:var(--cyber-yellow); font-weight:bold;">${m}</span>`);
+        document.getElementById('man-modal-body').innerHTML = `<pre style="white-space:pre-wrap; font-family:inherit;">${html}</pre>`;
+        document.getElementById('modal-man').style.display = 'flex';
+      } catch (e) {
+        toast("Error loading man DB", true);
+      }
+    }
+
+    // Ctrl+S to save
     window.addEventListener('keydown', (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        savePost();
+        saveFile();
       }
     });
 
     // Init
-    dateInput.value = new Date().toISOString().split('T')[0];
-    fetchPosts().then(() => {
-      if (allPosts.length > 0) loadPost(allPosts[0].filename, allPosts[0].is_draft);
-      else createNewPost(false);
+    dateIn.value = new Date().toISOString().split('T')[0];
+    loadTree().then(() => {
+      if (allEntries.length > 0) openFile(allEntries[0].filename, allEntries[0].is_draft);
+      else createNewFile(false);
     });
   </script>
 </body>
@@ -990,7 +1099,7 @@ def slugify(title):
     slug = re.sub(r'[^a-zA-Z0-9\u4e00-\u9fa5]+', '-', title).strip('-').lower()
     return slug or "article"
 
-class StudioHandler(http.server.SimpleHTTPRequestHandler):
+class LinuxStudioHandler(http.server.SimpleHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
@@ -1080,7 +1189,6 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
                     slug = slugify(title)
                     filename = f"{date_str}-{slug}.md" if not is_draft else f"{slug}.md"
 
-                # If moving between drafts and posts, remove old file from other directory
                 other_dir = POSTS_DIR if is_draft else DRAFTS_DIR
                 old_other_file = os.path.join(other_dir, filename)
                 if os.path.exists(old_other_file):
@@ -1173,7 +1281,7 @@ class StudioHandler(http.server.SimpleHTTPRequestHandler):
         elif url.path == "/api/git-push":
             try:
                 payload = json.loads(data.decode("utf-8")) if data else {}
-                msg = payload.get("message", "Update blog via Studio").replace('"', '\\"')
+                msg = payload.get("message", "Update blog via Linux Studio").replace('"', '\\"')
                 cmd = f'git add . && git commit -m "{msg}" && git push'
                 proc = subprocess.run(cmd, shell=True, cwd=BLOG_DIR, capture_output=True, text=True)
                 ok = (proc.returncode == 0) or ("nothing to commit" in proc.stdout)
@@ -1204,13 +1312,13 @@ def get_lan_ip():
 if __name__ == "__main__":
     os.chdir(BLOG_DIR)
     lan_ip = get_lan_ip()
-    server = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), StudioHandler)
+    server = http.server.ThreadingHTTPServer(("0.0.0.0", PORT), LinuxStudioHandler)
     print("=" * 64)
-    print("✨ Blog Studio Pro is Running!")
-    print(f"🖥️  Local PC Access:   http://localhost:{PORT}")
-    print(f"📱 Phone / LAN Access: http://{lan_ip}:{PORT}")
+    print("🐧 LINUX TERMINAL BLOG STUDIO RUNNING!")
+    print(f"👉 Local Access:   http://localhost:{PORT}")
+    print(f"📱 Phone / LAN:    http://{lan_ip}:{PORT}")
     print("=" * 64)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nStopping Studio server.")
+        print("\n[!] Studio server stopped.")
