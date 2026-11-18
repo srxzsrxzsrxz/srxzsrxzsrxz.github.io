@@ -1065,3 +1065,53 @@ iframe[src*="youtu.be"] {
     justify-content: center;
   }
 }
+
+/* Web Traffic & Visit Counter Styles */
+.traffic-counter-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #020306;
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-family: var(--mono-font);
+  font-size: 0.78rem;
+  box-shadow: 0 0 10px rgba(0, 255, 102, 0.05);
+}
+
+.traffic-tag {
+  color: var(--cyber-pink);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.traffic-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.counter-num {
+  color: #fff;
+  font-weight: 700;
+  min-width: 14px;
+}
+
+.post-reads-count {
+  color: var(--cyber-cyan);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+@media (max-width: 640px) {
+  .traffic-counter-box {
+    margin-top: 8px;
+    font-size: 0.74rem;
+    padding: 5px 10px;
+    width: 100%;
+    justify-content: center;
+  }
+}

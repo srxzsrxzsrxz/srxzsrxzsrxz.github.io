@@ -1,8 +1,26 @@
 <footer class="site-footer">
   <div class="site-container">
     <div class="footer-content">
-      <p>&copy; {{ 'now' | date: "%Y" }} {{ site.author }}. Built with GitHub Pages.</p>
-      <p>Powered by Jekyll &middot; Updated via Git &amp; Mobile</p>
+      <div>
+        <p>&copy; {{ 'now' | date: "%Y" }} {{ site.author }} &bull; srxz.io</p>
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:4px;">
+          Built with GitHub Pages &middot; Linux Theme
+        </p>
+      </div>
+
+      <!-- Live Web Visit Counter Widget -->
+      <div class="traffic-counter-box" title="Live Visitor Statistics">
+        <span class="traffic-tag">[SYS_TRAFFIC]</span>
+        <span id="busuanzi_container_site_pv" class="traffic-item">
+          <span style="color:var(--cyber-cyan); font-weight:700;">PV:</span>
+          <span id="busuanzi_value_site_pv" class="counter-num">...</span>
+        </span>
+        <span style="color:var(--border-color);">&bull;</span>
+        <span id="busuanzi_container_site_uv" class="traffic-item">
+          <span style="color:var(--hacker-green); font-weight:700;">UV:</span>
+          <span id="busuanzi_value_site_uv" class="counter-num">...</span>
+        </span>
+      </div>
     </div>
   </div>
 </footer>
@@ -21,20 +39,22 @@
   function applyTheme(theme) {
     if (theme === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
-      themeIcon.textContent = '☀️';
+      if (themeIcon) themeIcon.textContent = '☀️';
     } else {
       document.documentElement.removeAttribute('data-theme');
-      themeIcon.textContent = '🌙';
+      if (themeIcon) themeIcon.textContent = '🌙';
     }
   }
 
   const currentTheme = getPreferredTheme();
   applyTheme(currentTheme);
 
-  themeToggle.addEventListener('click', () => {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const nextTheme = isDark ? 'light' : 'dark';
-    localStorage.setItem('theme', nextTheme);
-    applyTheme(nextTheme);
-  });
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      const nextTheme = isDark ? 'light' : 'dark';
+      localStorage.setItem('theme', nextTheme);
+      applyTheme(nextTheme);
+    });
+  }
 </script>
