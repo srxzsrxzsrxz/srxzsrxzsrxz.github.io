@@ -1,213 +1,483 @@
 ---
 layout: default
-title: Linux Man Documentation
+title: Linux Command Manual
 permalink: /man/
 ---
 
 <div class="site-container">
-  <!-- Man Terminal Container -->
-  <div class="man-container">
-    <div class="terminal-titlebar">
-      <div class="terminal-dots">
-        <span class="dot dot-red"></span>
-        <span class="dot dot-yellow"></span>
-        <span class="dot dot-green"></span>
+  <div class="man-app-wrapper">
+    <!-- Top Bar -->
+    <div class="man-top-header">
+      <div class="man-header-meta">
+        <span class="man-logo-icon">🐧</span>
+        <div>
+          <h1 class="man-main-title">Linux Command Reference</h1>
+          <p class="man-subtitle">Interactive Cheatsheet &bull; 84 Commands</p>
+        </div>
       </div>
-      <div class="terminal-sys-info">
-        LINUX MAN-DB // 84 COMMANDS LOADED // REFERENCE MANUAL
+      <div class="view-switch-btns">
+        <button class="view-btn active" id="view-clean-btn" onclick="setViewMode('clean')">✨ Clean</button>
+        <button class="view-btn" id="view-raw-btn" onclick="setViewMode('raw')">📜 Terminal</button>
       </div>
     </div>
 
-    <!-- Search Controls -->
-    <div class="man-search-bar">
-      <span class="man-prompt">root@linux:~$ man</span>
-      <input type="text" id="man-search-input" placeholder="Type command name (e.g. arecord, ffmpeg, yt-dlp, grep, curl, ssh)..." autocomplete="off" spellcheck="false">
-      <button class="nav-btn" onclick="clearManSearch()">CLEAR</button>
+    <!-- Search Input -->
+    <div class="man-search-card">
+      <span class="search-cli-prompt">&gt; man</span>
+      <input type="text" id="man-search-input" placeholder="Search 84 commands (e.g. arecord, grep, ffmpeg, curl)..." autocomplete="off" spellcheck="false">
+      <button class="search-clear-btn" id="search-clear-btn" onclick="clearSearch()" title="Clear">✕</button>
     </div>
 
-    <!-- Category Filter Tabs -->
-    <div class="man-cat-tabs">
-      <button class="man-cat-btn active" onclick="filterCategory('all', this)">ALL (<span id="cat-cnt-all">84</span>)</button>
-      <button class="man-cat-btn" onclick="filterCategory('media', this)">AUDIO &amp; VIDEO</button>
-      <button class="man-cat-btn" onclick="filterCategory('files', this)">FILES &amp; DISK</button>
-      <button class="man-cat-btn" onclick="filterCategory('text', this)">TEXT &amp; GREP</button>
-      <button class="man-cat-btn" onclick="filterCategory('network', this)">NETWORK &amp; WEB</button>
-      <button class="man-cat-btn" onclick="filterCategory('system', this)">SYS &amp; PROC</button>
-      <button class="man-cat-btn" onclick="filterCategory('dev', this)">DEV &amp; PKG</button>
+    <!-- Category Filter Carousel (Swipeable on mobile) -->
+    <div class="man-cat-carousel">
+      <button class="cat-pill active" onclick="selectCategory('all', this)">✨ All (84)</button>
+      <button class="cat-pill" onclick="selectCategory('media', this)">🎥 Media</button>
+      <button class="cat-pill" onclick="selectCategory('files', this)">📁 Files</button>
+      <button class="cat-pill" onclick="selectCategory('text', this)">🔍 Text</button>
+      <button class="cat-pill" onclick="selectCategory('network', this)">🌐 Network</button>
+      <button class="cat-pill" onclick="selectCategory('system', this)">⚙️ System</button>
+      <button class="cat-pill" onclick="selectCategory('dev', this)">🛠️ Dev/Git</button>
     </div>
 
-    <!-- Quick Pill Tags -->
-    <div class="man-quick-chips" id="man-chips"></div>
+    <!-- Command Quick Selector (Swipeable Pills) -->
+    <div class="command-pills-bar" id="command-pills-bar">
+      <!-- Injected via JS -->
+    </div>
 
-    <!-- Man Page Display Box -->
-    <div class="man-display-box" id="man-display">
-      <div class="man-loading">Loading Linux manual database...</div>
+    <!-- Main Command Content Display Card -->
+    <div class="man-content-card" id="man-content-card">
+      <div class="man-loading-state">
+        <div class="pulse-icon">🐧</div>
+        <div>Loading command database...</div>
+      </div>
     </div>
   </div>
 </div>
 
 <style>
-  .man-container {
-    margin: 25px 0 60px;
-    background: #05070c;
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
-    overflow: hidden;
+  :root {
+    --man-card-bg: rgba(14, 19, 32, 0.92);
+    --man-border: rgba(74, 222, 128, 0.2);
+    --man-code-bg: #03050a;
   }
-  .man-search-bar {
-    padding: 14px 18px;
-    background: #090d16;
-    border-bottom: 1px solid var(--border-color);
+
+  .man-app-wrapper {
+    margin: 20px 0 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Header */
+  .man-top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--man-card-bg);
+    border: 1px solid var(--man-border);
+    border-radius: 14px;
+    backdrop-filter: blur(12px);
+  }
+
+  .man-header-meta {
     display: flex;
     align-items: center;
     gap: 12px;
   }
-  .man-prompt {
-    color: var(--hacker-green);
-    font-weight: 700;
-    font-size: 0.95rem;
-    white-space: nowrap;
+
+  .man-logo-icon {
+    font-size: 1.8rem;
+    background: rgba(0, 255, 102, 0.08);
+    border: 1px solid var(--man-border);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
   }
+
+  .man-main-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--hacker-green);
+    margin: 0;
+  }
+
+  .man-subtitle {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .view-switch-btns {
+    display: flex;
+    gap: 4px;
+    background: #020408;
+    padding: 3px;
+    border-radius: 8px;
+    border: 1px solid var(--man-border);
+  }
+
+  .view-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.74rem;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .view-btn.active {
+    background: var(--hacker-green);
+    color: #000;
+    font-weight: 800;
+  }
+
+  /* Search Card */
+  .man-search-card {
+    display: flex;
+    align-items: center;
+    background: var(--man-card-bg);
+    border: 1px solid var(--man-border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    gap: 10px;
+    transition: all 0.2s;
+  }
+
+  .man-search-card:focus-within {
+    border-color: var(--hacker-green);
+    box-shadow: 0 0 15px var(--hacker-glow);
+  }
+
+  .search-cli-prompt {
+    color: var(--hacker-green);
+    font-weight: 800;
+    font-size: 0.92rem;
+  }
+
   #man-search-input {
     flex: 1;
     background: transparent;
     border: none;
     color: #fff;
-    font-family: var(--mono-font);
-    font-size: 1rem;
+    font-family: inherit;
+    font-size: 0.95rem;
     outline: none;
   }
-  .man-cat-tabs {
-    display: flex;
-    background: #030408;
-    border-bottom: 1px solid var(--border-color);
-    overflow-x: auto;
-    white-space: nowrap;
-    padding: 2px 8px;
-  }
-  .man-cat-btn {
+
+  .search-clear-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
-    font-family: var(--mono-font);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px;
+  }
+
+  /* Category Carousel */
+  .man-cat-carousel {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .man-cat-carousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cat-pill {
+    background: #090d16;
+    border: 1px solid var(--man-border);
+    color: var(--text-secondary);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-family: inherit;
     font-size: 0.78rem;
     font-weight: 700;
-    padding: 8px 12px;
     cursor: pointer;
-    border-bottom: 2px solid transparent;
+    flex-shrink: 0;
     transition: all 0.2s;
   }
-  .man-cat-btn:hover {
-    color: var(--text-primary);
-  }
-  .man-cat-btn.active {
-    color: var(--hacker-green);
-    border-bottom-color: var(--hacker-green);
-    background: rgba(0, 255, 102, 0.05);
-  }
-  .man-quick-chips {
-    padding: 12px 18px;
-    background: #070912;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-    max-height: 140px;
-    overflow-y: auto;
-  }
-  .man-chip {
-    background: rgba(0, 255, 102, 0.06);
-    border: 1px solid var(--border-color);
-    color: var(--hacker-green);
-    font-size: 0.78rem;
-    padding: 2px 9px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-family: var(--mono-font);
-    transition: all 0.15s;
-  }
-  .man-chip:hover, .man-chip.active {
+
+  .cat-pill.active {
     background: var(--hacker-green);
     color: #000;
-    font-weight: 700;
+    border-color: var(--hacker-green);
     box-shadow: 0 0 10px var(--hacker-glow);
   }
-  .man-display-box {
-    padding: 24px;
-    min-height: 450px;
-    max-height: 720px;
-    overflow-y: auto;
-    font-family: var(--mono-font);
-    font-size: 0.92rem;
-    line-height: 1.65;
-    color: #f0fdf4;
-    white-space: pre-wrap;
-    background: #030408;
+
+  /* Command Selection Bar (Clean swipe list) */
+  .command-pills-bar {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
-  .man-header {
-    color: var(--cyber-cyan);
+
+  .command-pills-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cmd-pill {
+    background: rgba(0, 255, 102, 0.05);
+    border: 1px solid var(--man-border);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .cmd-pill.active {
+    background: rgba(0, 255, 102, 0.2);
+    border-color: var(--hacker-green);
+    color: var(--hacker-green);
     font-weight: 700;
-    border-bottom: 1px dashed var(--border-color);
-    padding-bottom: 8px;
-    margin-bottom: 18px;
+  }
+
+  /* Main Document Card */
+  .man-content-card {
+    background: var(--man-card-bg);
+    border: 1px solid var(--man-border);
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    min-height: 400px;
+  }
+
+  /* Clean Document Formatting */
+  .cmd-hero-box {
+    border-bottom: 1px solid var(--man-border);
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+  }
+
+  .cmd-hero-top {
     display: flex;
     justify-content: space-between;
-  }
-  .man-section-title {
-    color: var(--hacker-green);
-    font-weight: 800;
-    font-size: 1rem;
-    margin-top: 22px;
-    margin-bottom: 6px;
-    display: block;
-    text-shadow: 0 0 8px var(--hacker-glow);
-  }
-  .man-option {
-    color: var(--cyber-yellow);
-    font-weight: 700;
-  }
-  .man-loading {
-    color: var(--text-muted);
-    text-align: center;
-    padding: 60px 0;
-  }
-  .man-results-list {
-    display: flex;
-    flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
   }
-  .man-result-item {
+
+  .cmd-title-large {
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--hacker-green);
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 0 15px var(--hacker-glow);
+  }
+
+  .cmd-badge {
+    background: rgba(0, 240, 255, 0.1);
+    border: 1px solid rgba(0, 240, 255, 0.3);
+    color: var(--cyber-cyan);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .cmd-summary-text {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .doc-section {
+    margin-bottom: 22px;
+  }
+
+  .doc-section-title {
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    color: var(--cyber-cyan);
+    font-weight: 800;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .doc-section-title::before {
+    content: "■";
+    color: var(--hacker-green);
+    font-size: 0.65rem;
+  }
+
+  .code-block-box {
+    background: var(--man-code-bg);
+    border: 1px solid var(--man-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.88rem;
+    color: #f0fdf4;
+    overflow-x: auto;
+    position: relative;
+    line-height: 1.6;
+    margin-top: 6px;
+  }
+
+  .copy-code-btn {
+    position: absolute;
+    right: 8px;
+    top: 8px;
     background: #090d16;
-    border: 1px solid var(--border-color);
-    padding: 12px 16px;
-    border-radius: 6px;
+    border: 1px solid var(--man-border);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .copy-code-btn:hover {
+    color: var(--hacker-green);
+    border-color: var(--hacker-green);
+  }
+
+  .desc-paragraph {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: #cbd5e1;
+    margin-bottom: 10px;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .opt-card {
+    background: #080c16;
+    border: 1px solid var(--man-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.86rem;
+  }
+
+  .opt-flag {
+    color: var(--cyber-yellow);
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+    word-break: break-all;
+  }
+
+  .opt-desc {
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  /* Raw Terminal View */
+  .raw-term-pre {
+    background: #020306;
+    border: 1px solid var(--man-border);
+    padding: 16px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.6;
+    color: var(--hacker-green);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .man-loading-state {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pulse-icon {
+    font-size: 2.5rem;
+    animation: float 2s infinite ease-in-out;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  /* Search Filter List when typing */
+  .search-hits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-hit-item {
+    background: #080c16;
+    border: 1px solid var(--man-border);
+    border-radius: 8px;
+    padding: 12px 14px;
     cursor: pointer;
     transition: all 0.2s;
   }
-  .man-result-item:hover {
+
+  .search-hit-item:hover {
     border-color: var(--hacker-green);
-    transform: translateX(4px);
-    box-shadow: 0 0 15px var(--hacker-glow);
+    transform: translateX(3px);
+    box-shadow: 0 0 10px var(--hacker-glow);
   }
-  .man-result-cmd {
+
+  .search-hit-name {
     color: var(--hacker-green);
     font-weight: 800;
-    font-size: 1.05rem;
-    margin-bottom: 4px;
+    font-size: 0.98rem;
+    margin-bottom: 3px;
   }
-  .man-result-desc {
+
+  .search-hit-summary {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 600px) {
+    .man-content-card {
+      padding: 18px 14px;
+    }
+    .cmd-title-large {
+      font-size: 1.5rem;
+    }
   }
 </style>
 
 <script>
-  let manDatabase = {};
+  let manDb = {};
   let currentCategory = 'all';
+  let activeCommand = 'arecord';
+  let viewMode = 'clean'; // 'clean' or 'raw'
+
   const searchInput = document.getElementById('man-search-input');
-  const chipsContainer = document.getElementById('man-chips');
-  const displayBox = document.getElementById('man-display');
+  const pillsBar = document.getElementById('command-pills-bar');
+  const contentCard = document.getElementById('man-content-card');
 
   const CATEGORIES = {
     media: ['arecord', 'aplay', 'amixer', 'alsamixer', 'ffmpeg', 'ffprobe', 'yt-dlp', 'mpv', 'pactl', 'pipewire', 'wireplumber', 'sox'],
@@ -218,109 +488,240 @@ permalink: /man/
     dev: ['git', 'gh', 'tar', 'gzip', 'zip', 'unzip', 'tmux', 'screen', 'crontab', 'watch', 'env', 'sudo', 'man', 'dnf', 'rpm', 'pip', 'pipx']
   };
 
+  // Fetch Database
   fetch('/assets/js/man_db.json')
     .then(r => r.json())
     .then(data => {
-      manDatabase = data;
-      document.getElementById('cat-cnt-all').textContent = Object.keys(manDatabase).length;
-      renderChips();
-      
+      manDb = data;
+      renderCommandPills();
+
       const params = new URLSearchParams(window.location.search);
-      const cmdParam = params.get('cmd');
-      if (cmdParam && manDatabase[cmdParam.toLowerCase()]) {
-        renderManDoc(cmdParam.toLowerCase());
+      const q = params.get('cmd');
+      if (q && manDb[q.toLowerCase()]) {
+        renderCommand(q.toLowerCase());
       } else {
-        renderManDoc('arecord');
+        renderCommand('arecord');
       }
     })
     .catch(err => {
-      displayBox.innerHTML = '<div style="color:var(--danger)">Error loading Linux man database.</div>';
+      contentCard.innerHTML = '<div style="color:var(--danger); text-align:center; padding:40px;">Error loading database.</div>';
     });
 
-  function filterCategory(cat, btn) {
+  function selectCategory(cat, btn) {
     currentCategory = cat;
-    document.querySelectorAll('.man-cat-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
-    renderChips();
+    renderCommandPills();
   }
 
-  function renderChips() {
-    chipsContainer.innerHTML = '';
-    const allKeys = Object.keys(manDatabase).sort();
-    const filtered = currentCategory === 'all' 
-      ? allKeys 
-      : allKeys.filter(k => (CATEGORIES[currentCategory] || []).includes(k));
+  function renderCommandPills() {
+    pillsBar.innerHTML = '';
+    const keys = Object.keys(manDb).sort();
+    const list = currentCategory === 'all' ? keys : keys.filter(k => (CATEGORIES[currentCategory] || []).includes(k));
 
-    filtered.forEach(k => {
-      const chip = document.createElement('span');
-      chip.className = 'man-chip' + (searchInput.value.trim().toLowerCase() === k ? ' active' : '');
-      chip.textContent = k;
-      chip.onclick = () => renderManDoc(k);
-      chipsContainer.appendChild(chip);
+    list.forEach(k => {
+      const pill = document.createElement('button');
+      pill.className = 'cmd-pill' + (k === activeCommand ? ' active' : '');
+      pill.textContent = k;
+      pill.onclick = () => renderCommand(k);
+      pillsBar.appendChild(pill);
     });
   }
 
-  function renderManDoc(cmd) {
+  function setViewMode(mode) {
+    viewMode = mode;
+    document.getElementById('view-clean-btn').classList.toggle('active', mode === 'clean');
+    document.getElementById('view-raw-btn').classList.toggle('active', mode === 'raw');
+    if (activeCommand && manDb[activeCommand]) {
+      renderCommand(activeCommand);
+    }
+  }
+
+  // Parse Man Page into Structured Sections
+  function parseManDoc(raw) {
+    const sections = {};
+    let curSection = 'HEADER';
+    sections[curSection] = [];
+
+    const lines = raw.split('\\n');
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (/^[A-Z][A-Z\\s]{2,}$/.test(trimmed)) {
+        curSection = trimmed;
+        sections[curSection] = [];
+      } else {
+        sections[curSection].push(line);
+      }
+    });
+
+    const synopsis = (sections['SYNOPSIS'] || []).join('\\n').trim();
+    const desc = (sections['DESCRIPTION'] || []).join('\\n').trim();
+    const optionsRaw = (sections['OPTIONS'] || []).join('\\n').trim();
+    const examplesRaw = (sections['EXAMPLES'] || []).join('\\n').trim();
+
+    // Extract options
+    const options = [];
+    if (optionsRaw) {
+      const optBlocks = optionsRaw.split(/(?=\\n\\s{4,8}-[a-zA-Z0-9])/);
+      optBlocks.slice(0, 8).forEach(block => {
+        const blines = block.trim().split('\\n');
+        if (blines.length > 0) {
+          const flag = blines[0].trim();
+          const explanation = blines.slice(1).join(' ').trim();
+          if (flag.startsWith('-')) {
+            options.push({ flag, explanation });
+          }
+        }
+      });
+    }
+
+    return { synopsis, desc, options, examplesRaw };
+  }
+
+  function renderCommand(cmd) {
+    activeCommand = cmd;
     searchInput.value = cmd;
-    
-    document.querySelectorAll('.man-chip').forEach(c => {
-      c.classList.toggle('active', c.textContent === cmd);
+
+    // Update Pills
+    document.querySelectorAll('.cmd-pill').forEach(p => {
+      const isCur = p.textContent === cmd;
+      p.classList.toggle('active', isCur);
+      if (isCur) p.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     });
 
-    const item = manDatabase[cmd];
+    const item = manDb[cmd];
     if (!item) {
-      displayBox.innerHTML = `<div style="color:#ef4444;">No manual entry for ${cmd}</div>`;
+      contentCard.innerHTML = `<div style="text-align:center; padding:40px; color:#ef4444;">No manual entry found for "${cmd}"</div>`;
       return;
     }
 
-    let raw = item.doc;
-    raw = raw.replace(/^[A-Z][A-Z\s]{2,}$/gm, m => `<span class="man-section-title">${m}</span>`);
-    raw = raw.replace(/(^\s+-[a-zA-Z0-9_\-]+(?:,\s+--[a-zA-Z0-9_\-]+)?)/gm, m => `<span class="man-option">${m}</span>`);
+    if (viewMode === 'raw') {
+      contentCard.innerHTML = `
+        <div class="cmd-hero-box">
+          <div class="cmd-hero-top">
+            <h2 class="cmd-title-large">${cmd}(1)</h2>
+            <span class="cmd-badge">RAW TERMINAL VIEW</span>
+          </div>
+        </div>
+        <pre class="raw-term-pre">${item.doc}</pre>
+      `;
+      return;
+    }
 
-    displayBox.innerHTML = `
-      <div class="man-header">
-        <span>${cmd.toUpperCase()}(1)</span>
-        <span>Linux User's Manual</span>
-        <span>${cmd.toUpperCase()}(1)</span>
+    // Clean Structured View
+    const parsed = parseManDoc(item.doc);
+    let html = `
+      <div class="cmd-hero-box">
+        <div class="cmd-hero-top">
+          <h2 class="cmd-title-large">${cmd}</h2>
+          <span class="cmd-badge">SECTION 1 // USER COMMANDS</span>
+        </div>
+        <p class="cmd-summary-text">${item.summary || 'Linux system command documentation'}</p>
       </div>
-      <div>${raw}</div>
     `;
-    displayBox.scrollTop = 0;
+
+    // Synopsis Section
+    if (parsed.synopsis) {
+      html += `
+        <div class="doc-section">
+          <div class="doc-section-title">Synopsis / Syntax</div>
+          <div class="code-block-box">
+            <button class="copy-code-btn" onclick="copyText('${cmd}')">Copy</button>
+            <code>${parsed.synopsis}</code>
+          </div>
+        </div>
+      `;
+    }
+
+    // Description Section
+    if (parsed.desc) {
+      const paras = parsed.desc.split('\\n\\n').slice(0, 3);
+      html += `
+        <div class="doc-section">
+          <div class="doc-section-title">Description</div>
+          ${paras.map(p => `<p class="desc-paragraph">${p.trim()}</p>`).join('')}
+        </div>
+      `;
+    }
+
+    // Common Options Section
+    if (parsed.options.length > 0) {
+      html += `
+        <div class="doc-section">
+          <div class="doc-section-title">Essential Options &amp; Flags</div>
+          <div class="options-grid">
+            ${parsed.options.map(o => `
+              <div class="opt-card">
+                <span class="opt-flag">${o.flag}</span>
+                <div class="opt-desc">${o.explanation || 'Option parameter description'}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // Examples Section
+    if (parsed.examplesRaw) {
+      html += `
+        <div class="doc-section">
+          <div class="doc-section-title">Practical Examples</div>
+          <div class="code-block-box">
+            <code>${parsed.examplesRaw}</code>
+          </div>
+        </div>
+      `;
+    }
+
+    contentCard.innerHTML = html;
   }
 
+  // Live Search Listener
   searchInput.addEventListener('input', (e) => {
     let q = e.target.value.trim().toLowerCase();
-    if (q.startsWith('man ')) q = q.replace(/^man\s+/, '').trim();
+    if (q.startsWith('man ')) q = q.replace(/^man\\s+/, '').trim();
     if (!q) {
-      renderManDoc('arecord');
+      renderCommand('arecord');
       return;
     }
 
-    if (manDatabase[q]) {
-      renderManDoc(q);
+    // Exact Match
+    if (manDb[q]) {
+      renderCommand(q);
       return;
     }
 
-    const matches = Object.keys(manDatabase).filter(k => 
-      k.includes(q) || (manDatabase[k].summary && manDatabase[k].summary.toLowerCase().includes(q))
-    );
+    // Fuzzy List
+    const keys = Object.keys(manDb);
+    const hits = keys.filter(k => k.includes(q) || (manDb[k].summary && manDb[k].summary.toLowerCase().includes(q)));
 
-    if (matches.length === 0) {
-      displayBox.innerHTML = `<div style="color:var(--text-muted); padding:40px 0; text-align:center;">No manual entry matching "${q}"</div>`;
+    if (hits.length === 0) {
+      contentCard.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">No manual commands matching "${q}"</div>`;
       return;
     }
 
-    displayBox.innerHTML = '<div class="man-results-list">' + matches.map(k => `
-      <div class="man-result-item" onclick="renderManDoc('${k}')">
-        <div class="man-result-cmd">${k}(1) &rarr;</div>
-        <div class="man-result-desc">${manDatabase[k].summary || 'Linux manual documentation'}</div>
+    contentCard.innerHTML = `
+      <div class="doc-section-title" style="margin-bottom:14px;">Matching Commands (${hits.length})</div>
+      <div class="search-hits-list">
+        ${hits.map(k => `
+          <div class="search-hit-item" onclick="renderCommand('${k}')">
+            <div class="search-hit-name">${k} &rarr;</div>
+            <div class="search-hit-summary">${manDb[k].summary || 'Linux utility documentation'}</div>
+          </div>
+        `).join('')}
       </div>
-    `).join('') + '</div>';
+    `;
   });
 
-  function clearManSearch() {
+  function clearSearch() {
     searchInput.value = '';
-    renderManDoc('arecord');
+    renderCommand('arecord');
     searchInput.focus();
+  }
+
+  function copyText(txt) {
+    navigator.clipboard.writeText(txt).then(() => {
+      alert(`Copied "${txt}" to clipboard!`);
+    });
   }
 </script>
