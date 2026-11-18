@@ -6,6 +6,11 @@
         <span>{{ site.title }}</span>
       </a>
       <nav class="nav-links">
+        <button class="nav-search-btn" onclick="openSearchModal()" title="Search (Ctrl+K)">
+          <span>🔍</span>
+          <span class="search-label">Search...</span>
+          <kbd class="search-kbd">⌘K</kbd>
+        </button>
         <a href="{{ '/' | relative_url }}" class="nav-link">Home</a>
         <a href="{{ '/about/' | relative_url }}" class="nav-link">About</a>
         {% if site.github_username %}

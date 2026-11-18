@@ -1,0 +1,16 @@
+<div id="search-modal" class="search-modal-backdrop" onclick="if(event.target===this) closeSearchModal()">
+  <div class="search-modal-box">
+    <div class="search-modal-header">
+      <span class="search-modal-icon">🔍</span>
+      <input type="text" id="modal-search-input" placeholder="Search posts, vlogs, tags... (Esc to close)" autocomplete="off">
+      <button class="search-modal-close" onclick="closeSearchModal()" aria-label="Close search">&times;</button>
+    </div>
+    <div id="modal-search-results" class="search-modal-results">
+      <div class="search-empty">Type to search articles, vlogs, and notes...</div>
+    </div>
+    <div class="search-modal-footer">
+      <span><kbd>ESC</kbd> to close</span>
+      <span><kbd>Ctrl</kbd> + <kbd>K</kbd> to toggle</span>
+    </div>
+  </div>
+</div>
