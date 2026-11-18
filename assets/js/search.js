@@ -86,9 +86,15 @@ function setModalSearchTab(tab) {
 
 if (modalInput) {
   modalInput.addEventListener('input', async (e) => {
-    const q = e.target.value.trim().toLowerCase();
+    let q = e.target.value.trim().toLowerCase();
+    if (q.startsWith('man ')) {
+      // Auto-switch to man tab if user types "man ..."
+      setModalSearchTab('man');
+      q = q.replace(/^man\s+/, '').trim();
+    }
+
     if (!q) {
-      modalResults.innerHTML = `<div class="search-empty">Type to search ${currentSearchTab === 'posts' ? 'articles and vlogs' : 'Linux manual commands (e.g. ffmpeg, arecord, grep)'}...</div>`;
+      modalResults.innerHTML = `<div class="search-empty">Type to search ${currentSearchTab === 'posts' ? 'articles and vlogs' : 'Linux manual commands (e.g. grep, ffmpeg, arecord)'}...</div>`;
       return;
     }
 

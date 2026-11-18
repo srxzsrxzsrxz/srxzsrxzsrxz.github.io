@@ -232,7 +232,11 @@ permalink: /man/
 
   // Live search
   searchInput.addEventListener('input', (e) => {
-    const q = e.target.value.trim().toLowerCase();
+    let q = e.target.value.trim().toLowerCase();
+    // Strip leading "man " if user typed it
+    if (q.startsWith('man ')) {
+      q = q.replace(/^man\s+/, '').trim();
+    }
     if (!q) {
       renderManDoc('arecord');
       return;
