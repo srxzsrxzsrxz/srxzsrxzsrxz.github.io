@@ -2,35 +2,23 @@
   <div class="site-container">
     <div class="header-content">
       <a href="{{ '/' | relative_url }}" class="site-logo">
-        <span class="logo-badge">🎀</span>
-        <span>{{ site.title }}</span>
+        <span>srxz.io</span>
       </a>
       <nav class="nav-links">
+        <button class="nav-btn" onclick="toggleTerminal()" title="Toggle Cyber Terminal (HotKey: ~)">
+          <span style="color:var(--hacker-green);">&gt;_</span>
+          <span>CLI</span>
+        </button>
         <button class="nav-btn" onclick="openSearchModal()" title="Search (Ctrl+K)">
           <span>🔍</span>
-          <span style="font-size:0.85rem;">検索</span>
+          <span>SEARCH</span>
         </button>
-        <button class="nav-btn" id="sakura-toggle-btn" onclick="toggleSakuraButton()" title="Toggle Falling Sakura">
-          <span>🌸</span>
-        </button>
-        <a href="{{ '/' | relative_url }}" class="nav-link">Home</a>
-        <a href="{{ '/about/' | relative_url }}" class="nav-link">About</a>
+        <a href="{{ '/' | relative_url }}" class="nav-link">~/home</a>
+        <a href="{{ '/about/' | relative_url }}" class="nav-link">~/about</a>
         {% if site.github_username %}
-        <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link">GitHub</a>
+        <a href="https://github.com/{{ site.github_username }}" target="_blank" rel="noopener" class="nav-link">~/github</a>
         {% endif %}
-        <button id="theme-toggle" class="nav-btn" aria-label="Toggle dark mode">
-          <span id="theme-icon">🌙</span>
-        </button>
       </nav>
     </div>
   </div>
 </header>
-
-<script>
-  function toggleSakuraButton() {
-    if (window.toggleSakura) {
-      const active = window.toggleSakura();
-      document.getElementById('sakura-toggle-btn').style.opacity = active ? '1' : '0.4';
-    }
-  }
-</script>

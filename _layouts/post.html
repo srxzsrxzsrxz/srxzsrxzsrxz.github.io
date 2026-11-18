@@ -3,20 +3,20 @@ layout: default
 ---
 
 <div class="site-container">
-  <article class="post-card" style="margin-top: 35px; padding: 36px 32px;">
+  <article class="post-card" style="margin-top: 30px; padding: 32px;">
     <header class="article-header">
-      <div style="font-size: 0.88rem; color: var(--sakura-pink); font-weight: 700; margin-bottom: 8px;">
-        🌸 COSPLAY ARTICLE &bull; BLOG POST 🌸
+      <div style="font-size: 0.8rem; color: var(--hacker-green); font-family: var(--mono-font); margin-bottom: 8px;">
+        [SYS_LOG // READ_ONLY_ENTRY]
       </div>
       <h1 class="article-title">{{ page.title }}</h1>
       <div class="article-meta">
-        <span>📅 {{ page.date | date: "%Y年%m月%d日" }}</span>
+        <span>[DATE: {{ page.date | date: "%Y-%m-%d" }}]</span>
         {% if page.categories and page.categories.size > 0 %}
           {% for cat in page.categories %}
-            <span class="category-tag">🏷️ {{ cat }}</span>
+            <span class="category-tag">#{{ cat }}</span>
           {% endfor %}
         {% endif %}
-        <span>🎀 {{ page.author | default: site.author }}</span>
+        <span>[AUTHOR: {{ page.author | default: site.author }}]</span>
       </div>
     </header>
 
@@ -24,12 +24,12 @@ layout: default
       {{ content }}
     </div>
 
-    <div style="margin-top: 40px; padding-top: 24px; border-top: 2px dashed var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
       <a href="{{ '/' | relative_url }}" class="nav-btn" style="text-decoration:none;">
-        &larr; 🌸 ホームへ戻る (Back to Home)
+        &lt;&lt; RETURN_HOME
       </a>
       <a href="https://github.com/{{ site.github_username }}/{{ site.github_username }}.github.io/edit/main/{{ page.path }}" target="_blank" rel="noopener" class="nav-btn" style="text-decoration:none;">
-        ✏️ 記事を編集 (Edit Post)
+        [EDIT_SOURCE]
       </a>
     </div>
   </article>

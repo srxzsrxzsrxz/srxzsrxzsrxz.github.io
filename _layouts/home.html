@@ -3,39 +3,52 @@ layout: default
 ---
 
 <div class="site-container">
-  <!-- Cosplay Hero Profile -->
-  <section class="hero-cosplay-card">
-    <div class="hero-avatar-wrapper">
-      <div class="hero-avatar">🌸</div>
-      <div class="status-indicator" title="コスプレ活動中 / Active"></div>
+  <!-- Hacker Terminal Hero -->
+  <section class="hero-hacker-card">
+    <div class="terminal-titlebar">
+      <div class="terminal-dots">
+        <span class="dot dot-red"></span>
+        <span class="dot dot-yellow"></span>
+        <span class="dot dot-green"></span>
+      </div>
+      <div class="terminal-sys-info">
+        SYS_STATUS: ONLINE [200 OK] &bull; PROTOCOL: SECURE
+      </div>
     </div>
-    
-    <div class="hero-japanese-title">✨ COSPLAY &bull; ANIME VLOG &bull; 日常の記録 ✨</div>
-    <h1 class="hero-title">{{ site.title }}</h1>
-    <p class="hero-bio">
-      Japanese Anime &amp; Cosplay Creator &middot; 4K Cinematic Vlogs &middot; Photo Shoots &middot; Costume Making &amp; ACG Conventions.
-    </p>
 
-    <div class="cosplay-badges">
-      <span class="badge-item">👘 Cosplay Sets</span>
-      <span class="badge-item">🎥 Anime Vlogs</span>
-      <span class="badge-item">📸 Photo Shoots</span>
-      <span class="badge-item">🎪 Comiket / ACG Events</span>
-      <span class="badge-item">🎀 Wig &amp; Makeup</span>
-      <span class="badge-item">⚡ 4K 60FPS</span>
+    <div class="terminal-body">
+      <div class="terminal-prompt-line">
+        <span class="prompt-user">srxz@cyber-hub</span>:<span class="prompt-dir">~/cosplay</span>$ <span class="prompt-cmd">./run_matrix.sh --stream-vlogs</span>
+      </div>
+      
+      <h1 class="hero-title">
+        <span>{{ site.title }}</span>
+        <span class="cursor-blink"></span>
+      </h1>
+      
+      <p class="hero-bio">
+        Anime &amp; Cosplay Creator &times; Cyberpunk Tech Enthusiast. Documenting photo sets, 4K YouTube vlogs, costume crafting, and open source code experiments.
+      </p>
+
+      <div class="cyber-badges">
+        <span class="badge-item">[0x01] ⚡ Cosplay Sets</span>
+        <span class="badge-item">[0x02] 🎥 4K Vlogs</span>
+        <span class="badge-item">[0x03] 📸 Studio Shoots</span>
+        <span class="badge-item">[0x04] 💻 Hacker Scripts</span>
+        <span class="badge-item">[0x05] 🎪 ACG Conventions</span>
+      </div>
     </div>
   </section>
 
-  <!-- Posts Section with Search -->
+  <!-- Posts Section with Cyber Search -->
   <section class="posts-section">
     <div class="posts-header-bar">
       <h2 class="section-title">
-        <span>🎀</span>
-        <span>Latest Posts &amp; Vlogs</span>
+        <span>ARCHIVED_LOGS &amp; VLOGS</span>
       </h2>
       <div class="home-search-wrapper">
-        <span class="search-inline-icon">🔍</span>
-        <input type="text" id="home-search-input" placeholder="Search posts or cosplay..." aria-label="Search posts">
+        <span class="search-inline-icon">&gt;</span>
+        <input type="text" id="home-search-input" placeholder="filter logs by keyword..." aria-label="Search logs">
       </div>
     </div>
 
@@ -44,11 +57,11 @@ layout: default
       <article class="post-card">
         <div class="post-card-meta">
           <time class="post-card-date" datetime="{{ post.date | date_to_xmlschema }}">
-            🌸 {{ post.date | date: "%Y年%m月%d日" }}
+            [TIMESTAMP: {{ post.date | date: "%Y-%m-%d" }}]
           </time>
           {% if post.categories and post.categories.size > 0 %}
             {% for cat in post.categories %}
-              <span class="category-tag">🏷️ {{ cat }}</span>
+              <span class="category-tag">#{{ cat }}</span>
             {% endfor %}
           {% endif %}
         </div>
@@ -64,12 +77,12 @@ layout: default
         {% endif %}
       </article>
       {% else %}
-      <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">まだ記事がありません。新しい記事を投稿しましょう！</p>
+      <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">[SYSTEM] No logs compiled. Run <code>./new-post.sh</code> to initialize a log.</p>
       {% endfor %}
     </div>
 
     <div id="no-search-results" style="display:none; text-align:center; padding: 40px 0; color:var(--text-muted);">
-      <p>🔍 一致する投稿が見つかりませんでした (No matching posts found).</p>
+      <p>[!] QUERY RETURNED 0 MATCHES.</p>
     </div>
   </section>
 </div>
